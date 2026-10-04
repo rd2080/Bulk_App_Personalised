@@ -25,6 +25,12 @@ One row per check-in date. Columns are `id INTEGER GENERATED ALWAYS AS IDENTITY 
 
 The check-in repository also upserts the corresponding date and weight into `weight_entries` in the same transaction. See [daily check-in details](daily_checkins.md).
 
+## User Profile — `user_profile`
+
+The single-user profile has exactly ten columns: `age SMALLINT`, `height_cm NUMERIC(5,1)`, `target_weight_kg NUMERIC(5,1)`, `diet_type TEXT`, `diet_philosophy TEXT`, `calorie_strategy TEXT`, `cuisine_preference TEXT`, `regional_context TEXT`, `cooking_complexity TEXT`, and `meals_per_day SMALLINT`. All fields are required and constrained to supported numeric/text ranges. There is no id, name, timestamp, current weight, primary goal, allergy, or foreign-food-preference column. A unique expression index on the constant `true` enforces at most one row without adding a column. Migration `006_create_user_profile.sql` creates the table and index idempotently.
+
+The Profile page reads/writes through `bulking_app/repositories/user_profile.py`. The request builder calls that repository afresh on each invocation and never stores another profile copy. See [profile and request-builder architecture](../user-profile-and-request-builder.md).
+
 ## Migration source of truth
 
 Numbered SQL files in `database/migrations/` are the versioned schema source of truth. Add a migration for each change and keep applied migration files immutable. Update documentation alongside schema changes. A migration file in GitHub does not apply itself to Neon.
