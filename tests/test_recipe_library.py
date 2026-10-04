@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from bulking_app.repositories.recipe_library import (
-    nutrition_per_weight, validate_recipe, save_recipe,
+    delete_recipe, nutrition_per_weight, validate_recipe, save_recipe,
 )
 from bulking_app.services.recipe_csv import import_recipe_csvs, parse_and_validate, template_csv
 
@@ -95,6 +95,22 @@ class RecipeLibraryTests(unittest.TestCase):
         self.assertEqual(new_id, 17)
         self.assertTrue(any("INSERT INTO recipe_library" in sql for sql, _ in fake.sql))
         self.assertTrue(any("INSERT INTO recipe_ingredients" in sql for sql, _ in fake.sql))
+
+    def test_update_and_delete_crud_operations(self):
+        fake_update = FakeConnection()
+        recipe = {"recipe_name": "Oats", "recipe_type": "meal", "preference_level": "like",
+                  "cooking_complexity": "easy", "total_weight_g": 400, "calories_kcal": 600,
+                  "protein_g": 20, "carbohydrates_g": 80, "fat_g": 10}
+        with patch("bulking_app.repositories.recipe_library.connection", return_value=fake_update):
+            result_id = save_recipe(recipe, [], recipe_id=17)
+        self.assertEqual(result_id, 17)
+        self.assertTrue(any("UPDATE recipe_library SET" in sql for sql, _ in fake_update.sql))
+        self.assertTrue(any("DELETE FROM recipe_ingredients" in sql for sql, _ in fake_update.sql))
+
+        fake_delete = FakeConnection()
+        with patch("bulking_app.repositories.recipe_library.connection", return_value=fake_delete):
+            delete_recipe(17)
+        self.assertTrue(any("DELETE FROM recipe_library" in sql for sql, _ in fake_delete.sql))
 
     def test_csv_upsert_replaces_recipe_ingredients_transactionally(self):
         fake = FakeConnection([(1, "Oats")])
