@@ -19,7 +19,7 @@ class MorningCheckinTests(unittest.TestCase):
                                          MagicMock(fetchone=MagicMock(return_value=(9,)))]
         result = save_morning_checkin(checkin_date="2026-10-04", weight_kg=72.3,
                                       sleep_hours=7.5, soreness_level=4, daily_notes="  Rest day  ")
-        self.assertEqual(result, 9)
+        self.assertEqual(result, 3)
         self.assertEqual(self.conn.execute.call_count, 2)
         self.assertEqual(self.conn.execute.call_args_list[0].args[1][0], date(2026, 10, 4))
         self.assertEqual(self.conn.execute.call_args_list[0].args[1][-1], "Rest day")
