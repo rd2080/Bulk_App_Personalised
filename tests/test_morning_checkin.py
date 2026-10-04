@@ -1,5 +1,6 @@
 import unittest
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from bulking_app.repositories.morning_checkin import (
@@ -23,6 +24,9 @@ class MorningCheckinTests(unittest.TestCase):
         self.assertEqual(self.conn.execute.call_count, 2)
         self.assertEqual(self.conn.execute.call_args_list[0].args[1][0], date(2026, 10, 4))
         self.assertEqual(self.conn.execute.call_args_list[0].args[1][-1], "Rest day")
+        weight_insert = self.conn.execute.call_args_list[1]
+        self.assertIn("weight_entries", weight_insert.args[0])
+        self.assertEqual(weight_insert.args[1], (date(2026, 10, 4), Decimal("72.3")))
 
     def test_invalid_values_are_rejected_before_database_access(self):
         with patch("bulking_app.repositories.morning_checkin.connection") as connection_mock:
