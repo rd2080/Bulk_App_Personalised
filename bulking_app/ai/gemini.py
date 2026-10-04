@@ -14,7 +14,7 @@ class GeminiPlanner:
             raise RuntimeError("Set GEMINI_API_KEY in your .env file to generate a plan.")
         from google import genai
         self.client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-        self.model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        self.model = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 
     def generate_plan(self, context: dict[str, Any]) -> dict[str, Any]:
         response = self.client.models.generate_content(
