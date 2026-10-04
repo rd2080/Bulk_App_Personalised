@@ -37,9 +37,20 @@ The page contains no SQL. Database operations live in `bulking_app/repositories/
 
 `is_available` is deliberately separate from `quantity`. An item can have an unknown quantity and still be available, or retain a quantity while being temporarily marked unavailable.
 
-## Environment
+## Database configuration
 
-Set `DATABASE_URL` to the Neon PostgreSQL connection string. Never commit the connection string to GitHub. In Streamlit Cloud, store it as an application secret.
+The application checks the local `DATABASE_URL` environment variable first, then Streamlit Secrets.
+
+- **Local development:** set `DATABASE_URL` in your shell or local environment.
+- **Streamlit Cloud:** open the app's **Settings → Secrets** and add the following TOML entry, replacing the placeholder with the Neon PostgreSQL connection string:
+
+```toml
+DATABASE_URL = "your-neon-postgresql-connection-string"
+```
+
+Save the secrets and restart/redeploy the app if it does not restart automatically. Never commit the connection string to GitHub or put it in source files.
+
+If neither the environment variable nor Streamlit Secret is configured, the app reports that `DATABASE_URL` is missing and tells you where to configure it.
 
 ## Scope boundary
 
