@@ -1,24 +1,19 @@
 # Database schema
 
-## Database choice
+## Database
 
-The deployed application uses Neon PostgreSQL for persistent storage. PostgreSQL was chosen over SQLite because the app runs on Streamlit Cloud and needs database persistence independent of an individual app process or local filesystem.
+The deployed application uses Neon PostgreSQL. `bulking_app/neon.py` is the shared connection helper; SQL operations belong in repository modules.
 
-## Current first table: `weight_entries`
+## Phase 1 — `food_inventory`
 
-The agreed initial table stores one daily weight measurement:
+The existing Food Inventory table and behavior are unchanged. See [Food Inventory schema](food_inventory.md) and migration `003_create_food_inventory.sql`.
 
-| Column | PostgreSQL type | Rule / default | Purpose |
-|---|---|---|---|
-| `id` | `BIGSERIAL` | Primary key | Stable row identifier |
-| `entry_date` | `DATE` | `NOT NULL UNIQUE` | One entry per calendar day |
-| `weight_kg` | `NUMERIC(3,2)` | `NOT NULL` | Weight in kilograms |
-| `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Creation timestamp |
+## Phase 2 — `daily_checkins`
 
-The corresponding versioned migration is `database/migrations/001_create_weight_entries.sql`. The schema is documented here and in the migration file; this documentation task does not apply it to Neon.
+One row per check-in date. Columns are `id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY`, `checkin_date DATE NOT NULL UNIQUE`, `weight_kg NUMERIC(5,2)`, `sleep_hours NUMERIC(3,1)`, `soreness_level INTEGER`, `daily_notes TEXT`, and `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`. Weight is nullable only to preserve compatibility with any pre-Phase 2 rows; Phase 2 requires and writes it. Weight is constrained to 25–350 kg, sleep to 0–24 hours, and soreness to 1–10. Notes are optional.
+
+The check-in repository also upserts the corresponding date and weight into the existing `weight_entries` table in the same transaction. See [daily check-in details](daily_checkins.md).
 
 ## Migration source of truth
 
-`database/migrations/` is the versioned source of truth for schema changes. Represent every database change in a numbered SQL migration file so the intended evolution is reviewable and auditable. Keep applied migration files immutable; add a new migration for later changes. Update this document alongside schema migrations when the documented design changes.
-
-A migration file records an intended change. It does not mean that the migration has been run against Neon.
+Numbered SQL files in `database/migrations/` are the versioned schema source of truth. Add a migration for each change and keep applied migration files immutable. Update documentation alongside schema changes. A migration file in GitHub does not apply itself to Neon.
