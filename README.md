@@ -12,10 +12,12 @@ Use Python 3.9+, install `requirements.txt`, configure `DATABASE_URL` with your 
 
 **Phase 2 — Morning Check-in:** use the separate Morning Check-in page to save the check-in date, weight in kg, sleep hours, soreness (1–10), and optional notes. Check-ins persist to Neon PostgreSQL and can be reviewed or updated by date.
 
-Meal planning, meal logging, schedules/constraints, and analytics are not included in these phases.
+**User Profile:** the dedicated Profile page reads and saves the single current profile in Neon. Its only fields are age, height, target weight, diet type, diet philosophy, calorie strategy, cuisine preference, regional context, cooking complexity, and meals per day.
+
+Meal generation is not implemented. The AI request builder is a reusable foundation that reads the profile from its repository every time it is called and returns structured context. It does not save an AI copy of the profile or call an AI provider. Future context sources are extension points only.
 
 ## Architecture and database
 
-The app uses the existing Neon connection helper (`bulking_app/neon.py`) and repository pattern. See [architecture](docs/architecture/overview.md), [database schema](docs/database/schema.md), [Phase 1](docs/phase-1-food-inventory.md), and [Phase 2](docs/phase-2-morning-check-in.md).
+The app uses the Neon connection helper (`bulking_app/neon.py`) and repository pattern. Profile data access and validation live in `bulking_app/repositories/user_profile.py`. Request preparation lives in `bulking_app/ai/request_builder.py`. See [database schema](docs/database/schema.md) and [User Profile and request builder](docs/user-profile-and-request-builder.md).
 
 Numbered SQL files under `database/migrations/` document schema changes. Apply a new migration to Neon before deploying code that depends on it; a file in GitHub does not change the database automatically.
