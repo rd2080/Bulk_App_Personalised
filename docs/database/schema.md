@@ -31,6 +31,14 @@ The single-user profile has exactly ten columns: `age SMALLINT`, `height_cm NUME
 
 The Profile page reads/writes through `bulking_app/repositories/user_profile.py`. The request builder calls that repository afresh on each invocation and never stores another profile copy. See [profile and request-builder architecture](../user-profile-and-request-builder.md).
 
+## Recipe Library — `recipe_library` and `recipe_ingredients`
+
+`recipe_library` has exactly `id`, `recipe_name`, `recipe_type`, `preference_level`, `cooking_complexity`, `total_weight_g`, `calories_kcal`, `protein_g`, `carbohydrates_g`, and `fat_g`. Recipe names are unique. Type values are `meal`, `snack`, or `shake`; preference values are `favorite`, `like`, `neutral`, `dislike`, or `never`; complexity values are `easy`, `medium`, or `hard`. Total prepared weight must be positive; nutrition values must be non-negative.
+
+`recipe_ingredients` has exactly `recipe_id`, `food_id`, `quantity`, and `unit`. It references `recipe_library` with delete cascade and `food_inventory` with delete restriction. Quantity is positive, unit is non-empty, and each food can occur once per recipe. There are no ingredient-level calories or macros. Recipe nutrition per serving is deterministic proportional scaling: each recipe nutrient multiplied by `serving_weight_g / total_weight_g`.
+
+Migration `007_create_recipe_library.sql` is additive and preserves the existing inventory table. Recipe CRUD, composition, CSV import, and serving calculations live in `bulking_app/repositories/recipe_library.py` and `bulking_app/services/recipe_csv.py`.
+
 ## Migration source of truth
 
 Numbered SQL files in `database/migrations/` are the versioned schema source of truth. Add a migration for each change and keep applied migration files immutable. Update documentation alongside schema changes. A migration file in GitHub does not apply itself to Neon.
