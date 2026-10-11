@@ -16,6 +16,8 @@ Use Python 3.9+, install `requirements.txt`, configure `DATABASE_URL` with your 
 
 **Recipe Library:** the Food Inventory page also manages recipes, their recipe-level nutrition, preference and cooking complexity, prepared weight, and ingredient composition. Ingredients reference existing inventory foods but do not store nutrition.
 
+**Phase 1 — Voice Input Foundation:** the Voice Input page provides browser microphone dictation, editable transcription review, and a text-entry fallback. Transcription uses browser speech recognition and does not call Gemini or OpenAI. Availability depends on browser support and microphone permission. See [Voice Input](docs/voice-input.md) for setup, privacy, and troubleshooting details. This page prepares reviewed text only; meal-plan processing is not yet connected.
+
 Meal generation is not implemented. The AI request builder is a reusable foundation that reads the profile from its repository every time it is called and returns structured context. It does not save an AI copy of the profile or call an AI provider. Future context sources are extension points only.
 
 ## Architecture and database

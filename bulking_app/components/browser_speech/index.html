@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { margin: 0; font: 14px sans-serif; color: #262730; }
+      button { border: 1px solid #aaa; border-radius: 8px; background: white; padding: 9px 14px; cursor: pointer; }
+      button:disabled { cursor: wait; opacity: .65; }
+      #status { margin-left: 10px; }
+    </style>
+  </head>
+  <body>
+    <button id="toggle" type="button">🎙️ Start speaking</button><span id="status" role="status"></span>
+    <script>
+      const button = document.getElementById("toggle");
+      const status = document.getElementById("status");
+      let recognition = null;
+      let lastLanguage = "en-US";
+
+      function send(type, data) {
+        window.parent.postMessage({ isStreamlitMessage: true, type, ...data }, "*");
+      }
+
+      function setValue(value) {
+        send("streamlit:setComponentValue", { value });
+      }
+
+      send("streamlit:componentReady", { apiVersion: 1 });
+      send("streamlit:setFrameHeight", { height: 48 });
+
+      window.addEventListener("message", (event) => {
+        if (event.data?.type === "streamlit:render") {
+          lastLanguage = event.data.args?.language || "en-US";
+        }
+      });
+
+      button.addEventListener("click", () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          status.textContent = "Voice recognition is not supported in this browser.";
+          setValue({ status: "unsupported" });
+          return;
+        }
+        if (recognition) {
+          recognition.stop();
+          return;
+        }
+
+        recognition = new SpeechRecognition();
+        recognition.lang = lastLanguage;
+        recognition.interimResults = false;
+        recognition.continuous = false;
+        button.textContent = "⏹️ Stop speaking";
+        status.textContent = "Listening…";
+        setValue({ status: "listening" });
+
+        recognition.onresult = (event) => {
+          const transcript = Array.from(event.results)
+            .map((result) => result[0].transcript)
+            .join(" ")
+            .trim();
+          setValue(transcript ? { status: "success", transcript } : { status: "empty" });
+        };
+        recognition.onerror = (event) => {
+          setValue({ status: "error", error: event.error || "recognition-failed" });
+        };
+        recognition.onend = () => {
+          recognition = null;
+          button.textContent = "🎙️ Start speaking";
+          if (status.textContent === "Listening…") status.textContent = "";
+        };
+        try {
+          recognition.start();
+        } catch (error) {
+          recognition = null;
+          button.textContent = "🎙️ Start speaking";
+          status.textContent = "Could not start recognition. Use the text box below.";
+          setValue({ status: "error", error: "start-failed" });
+        }
+      });
+    </script>
+  </body>
+</html>
