@@ -12,22 +12,22 @@ Use Python 3.9+, install `requirements.txt`, configure `DATABASE_URL` with your 
 
 **Phase 2 — Morning Check-in:** use the separate Morning Check-in page to save the check-in date, weight in kg, sleep hours, soreness (1–10), and optional notes. Check-ins persist to Neon PostgreSQL and can be reviewed or updated by date.
 
-**User Profile:** the dedicated Profile page reads and saves the single current profile in Neon. Its only fields are age, height, target weight, diet type, diet philosophy, calorie strategy, cuisine preference, regional context, cooking complexity, and meals per day.
+**User Profile:** the dedicated Profile page reads and saves the single current profile in Neon. Its fields cover age, height, target weight, diet type, diet philosophy, calorie strategy, cuisine preference, regional context, cooking complexity, and meals per day.
 
-**Recipe Library:** the Food Inventory page also manages recipes, their recipe-level nutrition, preference and cooking complexity, prepared weight, and ingredient composition. Ingredients reference existing inventory foods but do not store nutrition.
+**Recipe Library:** the Food Inventory page also manages recipes, recipe-level nutrition, preference and cooking complexity, prepared weight, and ingredient composition. Ingredients reference existing inventory foods but do not store nutrition. CSV import and template downloads are documented in [Recipe Library](docs/recipe-library.md).
 
-**Phase 1 — Voice Input Foundation:** the Voice Input page provides browser microphone dictation, editable transcription review, and a text-entry fallback. Transcription uses browser speech recognition and does not call Gemini or OpenAI. Availability depends on browser support and microphone permission. See [Voice Input](docs/voice-input.md) for setup, privacy, and troubleshooting details. This page prepares reviewed text only; meal-plan processing is not yet connected.
+**Phase 1 — Voice Input:** browser microphone dictation, editable transcription review, and text fallback. Transcription does not call Gemini or OpenAI. Browser support varies; Chrome was manually confirmed during development. See [Voice Input](docs/voice-input.md).
 
-Meal generation is not implemented. The AI request builder is a reusable foundation that reads the profile from its repository every time it is called and returns structured context. It does not save an AI copy of the profile or call an AI provider. Future context sources are extension points only.
+**Phase 2 — Daily Meal Plan:** create, edit, remove, and review meals for a selected date. Plans persist in Neon through `bulking_app/repositories/meal_plan.py`. See [Daily Meal Plan](docs/daily-meal-plan.md) and migration `008_create_daily_meal_plans.sql`.
+
+**Phase 3 — Deterministic Meal Commands:** reviewed text from the Voice Input page can populate or update the selected day's plan. Supported actions include a labeled multi-meal plan and explicit add, replace, and remove commands. The parser uses Python rules and does not call Gemini/OpenAI. Ambiguous requests ask for clarification. See [Voice Input](docs/voice-input.md).
 
 ## Architecture and database
 
-The app uses the Neon connection helper (`bulking_app/neon.py`) and repository pattern. Profile data access and validation live in `bulking_app/repositories/user_profile.py`. Request preparation lives in `bulking_app/ai/request_builder.py`. See [database schema](docs/database/schema.md) and [User Profile and request builder](docs/user-profile-and-request-builder.md).
+The app uses the Neon connection helper (`bulking_app/neon.py`) and repository pattern. Profile data access and validation live in `bulking_app/repositories/user_profile.py`. AI request preparation lives in `bulking_app/ai/request_builder.py`; it does not itself call an AI provider.
 
-Numbered SQL files under `database/migrations/` document schema changes. Apply a new migration to Neon before deploying code that depends on it; a file in GitHub does not change the database automatically.
+Numbered SQL files under `database/migrations/` document schema changes. Apply a migration to the intended Neon branch/database before deploying code that depends on it; a file in GitHub does not change the database automatically.
 
-The Recipe Library schema and CSV workflow are documented in [database schema](docs/database/schema.md) and [Recipe Library](docs/recipe-library.md). CSV import takes `recipes.csv` and `recipe_ingredients.csv` together, validates headers, values, and food/recipe references, previews the rows, then upserts all recipes and replaces their ingredient composition in one database transaction. Existing recipe names are updated. Downloadable templates include sample rows. Supported recipe types are `meal`, `snack`, `shake`; preferences are `favorite`, `like`, `neutral`, `dislike`, `never`; cooking complexity is `easy`, `medium`, `hard`.
+The existing Neon schema includes `daily_meal_plans` and `planned_meals` for dated meal plans. Phase 3 reuses these tables and introduces no database migration. See [database schema](docs/database/schema.md).
 
-Current workflows cover food inventory, recipe management, user profile and check-ins, and dated meal planning. The app does not add AI meal generation, meal logging, supplements, workout integration, or analytics.
-
-**Phase 2 — Daily Meal Plan:** the Daily Meal Plan page saves one plan per date and lets you add, edit, remove, and review its meals. Meal rows include a meal type, name, optional details, and display order. Data persists in Neon PostgreSQL through `bulking_app/repositories/meal_plan.py`. See [Daily Meal Plan](docs/daily-meal-plan.md) and migration `008_create_daily_meal_plans.sql`. This workflow stores plans only; it does not interpret free-form commands, generate suggestions, or log actual consumption.
+AI meal suggestions, nutrition calculations, and actual-consumption tracking remain future phases. Routine plan entry and command processing do not require AI calls.
