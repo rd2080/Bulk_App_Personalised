@@ -181,6 +181,23 @@ def apply_meal_commands(text: str, plan_date: date) -> dict[str, Any]:
             }
         resolved.append((operation, matches[0] if matches else None))
 
+    # Validate all proposed values before any write so a later invalid item cannot
+    # leave a multi-meal plan only partially updated.
+    for operation, existing in resolved:
+        action = operation["action"]
+        target = operation["meal_type"]
+        content_value = operation["content"]
+        if action != "remove":
+            proposed_name = content_value
+            if action == "add" and existing:
+                proposed_name = f"{existing['meal_name']} + {content_value}"
+            if not proposed_name.strip() or len(proposed_name.strip()) > 160:
+                return {
+                    "status": "clarification",
+                    "message": f"The {target.lower()} description must be between 1 and 160 characters. Shorten it or edit the meal manually.",
+                    "changes": [],
+                }
+
     changes: list[str] = []
     for operation, existing in resolved:
         action = operation["action"]
@@ -197,12 +214,6 @@ def apply_meal_commands(text: str, plan_date: date) -> dict[str, Any]:
 
         if action == "add" and existing:
             new_name = f"{existing['meal_name']} + {content}"
-            if len(new_name) > 160:
-                return {
-                    "status": "clarification",
-                    "message": f"The {target.lower()} entry is too long to append safely. Replace it with the full meal description instead.",
-                    "changes": [],
-                }
             save_meal(
                 plan_date=plan_date,
                 meal_id=existing["id"],
