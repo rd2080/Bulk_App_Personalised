@@ -37,7 +37,7 @@ def save_meal(*, plan_date: date | str, meal_type: str, meal_name: str,
     name = meal_name.strip()
     if not name or len(name) > 160:
         raise ValueError("Meal name is required and must be 160 characters or fewer.")
-    detail = description.strip() or None
+    detail = description.strip()
     if len(description) > 2000:
         raise ValueError("Meal notes must be 2,000 characters or fewer.")
 
