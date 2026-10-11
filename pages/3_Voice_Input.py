@@ -1,16 +1,19 @@
-"""Voice-to-text input foundation for future meal-planning workflows."""
+"""Voice input and deterministic application of reviewed meal commands."""
 
 import streamlit as st
+from datetime import date
 
+from bulking_app.meal_commands import apply_meal_commands
+from bulking_app.repositories.meal_plan import list_meals
 from bulking_app.voice_input import browser_speech_input
 
 st.set_page_config(page_title="Voice Input | Bulk App", page_icon="🎙️", layout="centered")
-st.title("Voice Input")
-st.caption("Speak a meal description, review the words, then use the corrected text.")
+st.title("Voice Input & Meal Commands")
+st.caption("Speak your plan, review the transcription, then apply it to a selected date.")
 st.info(
-    "Transcription uses your browser's built-in speech recognition. The app does not "
-    "send audio to Gemini, OpenAI, or a transcription API. Browser vendors may handle "
-    "recognition remotely; see the privacy note below."
+    "Transcription uses your browser's built-in speech recognition. Routine meal "
+    "commands are processed with Python rules and do not call Gemini or OpenAI. "
+    "Browser vendors may handle speech recognition remotely."
 )
 
 if "voice_transcription" not in st.session_state:
@@ -27,30 +30,53 @@ try:
                 "your meal description below instead."
             )
 except Exception:
-    st.warning(
-        "The voice control could not start. Enter or paste your meal description below."
-    )
+    st.warning("The voice control could not start. Enter or paste your meal description below.")
 
 with st.form("voice_review_form"):
     reviewed_text = st.text_area(
         "Review and edit your transcription",
         key="voice_transcription",
         height=180,
-        placeholder="For example: Lunch is three rotis and paneer bhurji.",
-        help="You can type here whether or not voice recognition is supported.",
+        placeholder="Breakfast: two bananas and milk. Lunch: three rotis and paneer bhurji. Dinner: dal rice.",
+        help="Correct any speech-recognition errors before applying the text.",
     )
-    submitted = st.form_submit_button("Use this text", type="primary")
+    plan_date = st.date_input("Apply to plan date", value=date.today(), key="voice_plan_date")
+    submitted = st.form_submit_button("Apply to meal plan", type="primary")
 
 if submitted:
-    if reviewed_text.strip():
-        st.session_state.reviewed_voice_input = reviewed_text.strip()
-        st.success("Your reviewed text is ready to use.")
-        st.text(st.session_state.reviewed_voice_input)
+    if not reviewed_text.strip():
+        st.warning("Enter or dictate a meal description before continuing.")
     else:
-        st.warning("Enter or dictate some text before continuing.")
+        try:
+            outcome = apply_meal_commands(reviewed_text, plan_date)
+            st.session_state.reviewed_voice_input = reviewed_text.strip()
+            if outcome["status"] == "success":
+                st.success(outcome["message"])
+                for change in outcome["changes"]:
+                    st.write(f"- {change}")
+            else:
+                st.warning(outcome["message"])
+        except (RuntimeError, ValueError) as exc:
+            st.error(str(exc))
+
+st.divider()
+selected_date = st.session_state.get("voice_plan_date", date.today())
+st.subheader(f"Saved plan for {selected_date.isoformat()}")
+try:
+    saved_meals = list_meals(selected_date)
+    if not saved_meals:
+        st.info("No meals saved for this date yet. Describe your plan above to get started.")
+    else:
+        for meal in saved_meals:
+            st.markdown(f"**{meal['meal_type']} — {meal['meal_name']}**")
+            if meal["description"]:
+                st.caption(meal["description"])
+except RuntimeError as exc:
+    st.error(str(exc))
 
 st.caption(
-    "This Phase 1 page captures and reviews text; meal-plan processing is a later phase. "
-    "Browser speech recognition support, accuracy, and audio privacy vary by browser. "
-    "Review your browser's speech privacy settings before dictating sensitive details."
+    "Supported commands include a daily plan with meal labels (Breakfast, Lunch, Dinner, "
+    "Morning snack, Evening snack), and explicit add/replace/remove instructions. "
+    "If a command is ambiguous, the app asks for clarification instead of guessing. "
+    "Use the Daily Meal Plan page for direct manual editing."
 )
