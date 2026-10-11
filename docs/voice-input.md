@@ -1,26 +1,36 @@
-# Voice Input (Phase 1)
+# Voice Input and Meal Commands (Phases 1 and 3)
 
-The **Voice Input** page lets you dictate a meal description, edit the resulting text, and submit the reviewed text for later use. It is a foundation for a later meal-planning phase; it does not interpret commands, modify a plan, or save meals.
+The **Voice Input** page lets you dictate a meal description, edit the transcription, and apply it to a selected date's saved meal plan. Speech recognition uses the browser Web Speech API. Routine command interpretation uses deterministic Python rules; it does not call Gemini or OpenAI.
 
-## Speech recognition choice
+## Speech recognition and privacy
 
-The page uses the browser's native Web Speech recognition interface through a small Streamlit component included in the repository. The app does not transmit audio to a transcription service, nor does it call Gemini or OpenAI for transcription. It requires a supported browser and microphone permission. Recognition support and quality vary by browser and device.
-
-“The app does not transmit audio” does not mean recognition is guaranteed to run entirely on-device. Browser vendors may process speech using their own services. Review the browser's speech and privacy settings before dictating sensitive information. The app does not separately upload or store microphone audio.
+The app does not send audio to Gemini, OpenAI, or a transcription API. This does not guarantee that recognition runs entirely on-device: browser vendors may process speech through their own services. Recognition support and quality vary by browser and device. Review browser speech-privacy settings before dictating sensitive details.
 
 ## Use it
 
-1. Open **Voice Input** in the Streamlit sidebar.
+1. Open **Voice Input & Meal Commands** in the Streamlit sidebar.
 2. Select **Start speaking**, allow microphone access, and dictate in English.
 3. Select **Stop speaking** when finished.
-4. Correct the transcription in the review box, or type/paste text there if voice recognition is unavailable.
-5. Select **Use this text**. The page confirms the reviewed text; later phases can connect it to meal-plan processing.
+4. Correct the transcription in the review box.
+5. Choose the date whose plan should be updated.
+6. Select **Apply to meal plan** and review the confirmation or clarification message.
+
+The saved plan for the selected date appears below the form. The **Daily Meal Plan** page remains available for direct manual editing.
+
+## Supported deterministic commands
+
+- **Initial plan:** label meals, e.g. `Breakfast: two bananas and milk. Lunch: three rotis and paneer bhurji. Dinner: dal rice.`
+- **Replace a meal:** `Change my lunch to dal rice.`
+- **Add to a meal:** `Add a banana to breakfast.`
+- **Remove a meal:** `Remove dinner.`
+
+Recognized meal slots are breakfast, morning snack, lunch, afternoon/evening snack, dinner, and other. The generic word `snack` is ambiguous and triggers a clarification. If a slot is missing, repeated in the same initial plan, or has multiple existing entries, the app asks the user to clarify rather than guessing.
+
+For this phase, meal contents are stored as text in the existing `planned_meals` rows. Ingredient parsing, nutrition calculation, AI suggestions, and actual-consumption logging are not included.
 
 ## Troubleshooting
 
-- If the microphone button is unavailable or recognition returns no text, use the text box directly.
-- Allow microphone access for the app's site in browser settings. Remote deployments generally need HTTPS for microphone access.
-- Try a current browser with Web Speech recognition support if the voice control is unavailable.
-- Recognition errors, unsupported browsers, or denied permission do not prevent manual text entry.
-
-The browser component uses no additional Python dependency. Its JavaScript relies on the browser Web Speech API; no audio-recognition library or cloud transcription SDK is added to the app.
+- If voice recognition is unavailable or returns no speech, type or paste into the review box.
+- Allow microphone access for the app site. Remote deployments generally require HTTPS for microphone access.
+- Chrome was manually confirmed to transcribe speech during development; Brave compatibility has not been resolved.
+- If a command is not recognized, use a clear meal label or make the change on the Daily Meal Plan page.
