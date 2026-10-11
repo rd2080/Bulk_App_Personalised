@@ -42,3 +42,7 @@ Migration `007_create_recipe_library.sql` is additive and preserves the existing
 ## Migration source of truth
 
 Numbered SQL files in `database/migrations/` are the versioned schema source of truth. Add a migration for each change and keep applied migration files immutable. Update documentation alongside schema changes. A migration file in GitHub does not apply itself to Neon.
+
+## Daily Meal Plans — `daily_meal_plans` and `planned_meals`
+
+`daily_meal_plans` stores one plan per `plan_date` (unique), with identity id and creation/update timestamps. `planned_meals` stores the ordered meals for a plan: meal type, name, optional details, position, and creation timestamp. Meal types are `Breakfast`, `Morning snack`, `Lunch`, `Afternoon snack`, `Dinner`, or `Other`. Each meal belongs to a plan through a cascading foreign key. The additive migration is `008_create_daily_meal_plans.sql`; it does not alter existing tables. Meal-plan persistence is in `bulking_app/repositories/meal_plan.py`. See [Daily Meal Plan](../daily-meal-plan.md).
