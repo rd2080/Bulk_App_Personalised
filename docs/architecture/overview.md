@@ -6,7 +6,7 @@
 - **Streamlit** provides the Profile, Food Inventory, Morning Check-in, Voice Input, and Daily Meal Plan pages (in that order).
 - **Neon PostgreSQL** provides persistent application data.
 - **The Neon connection helper** in `bulking_app/neon.py` reads deployment secrets and is shared by repository modules.
-- **Deterministic meal command processing** in `bulking_app/meal_commands.py` interprets a limited set of reviewed commands with Python rules. It has no Gemini/OpenAI dependency.
+- **Deterministic meal command processing** in `bulking_app/meal_commands.py` interprets a limited set of reviewed commands with Python rules. It has no AI-provider dependency.
 
 The deployed app connects to Neon using deployment secrets. Credentials belong in Streamlit Cloud secrets or local environment configuration, never in source control.
 

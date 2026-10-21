@@ -16,11 +16,11 @@ Use Python 3.9+, install `requirements.txt`, configure `DATABASE_URL` with your 
 
 **Recipe Library:** the Food Inventory page also manages recipes, recipe-level nutrition, preference and cooking complexity, prepared weight, and ingredient composition. Ingredients reference existing inventory foods but do not store nutrition. CSV import and template downloads are documented in [Recipe Library](docs/recipe-library.md).
 
-**Phase 1 — Voice Input:** browser microphone dictation, editable transcription review, and text fallback. Transcription does not call Gemini or OpenAI. Browser support varies; Chrome was manually confirmed during development. See [Voice Input](docs/voice-input.md).
+**Phase 1 — Voice Input:** browser microphone dictation, editable transcription review, and text fallback. Transcription does not call any AI provider. Browser support varies; Chrome was manually confirmed during development. See [Voice Input](docs/voice-input.md).
 
 **Phase 2 — Daily Meal Plan:** create, edit, remove, and review meals for a selected date. Plans persist in Neon through `bulking_app/repositories/meal_plan.py`. See [Daily Meal Plan](docs/daily-meal-plan.md) and migration `008_create_daily_meal_plans.sql`.
 
-**Phase 3 — Deterministic Meal Commands:** reviewed text from the Voice Input page can populate or update the selected day's plan. Supported actions include a labeled multi-meal plan and explicit add, replace, and remove commands. The parser uses Python rules and does not call Gemini/OpenAI. Ambiguous requests ask for clarification. See [Voice Input](docs/voice-input.md).
+**Phase 3 — Deterministic Meal Commands:** reviewed text from the Voice Input page can populate or update the selected day's plan. Supported actions include a labeled multi-meal plan and explicit add, replace, and remove commands. The parser uses Python rules and does not call any AI provider. Ambiguous requests ask for clarification. See [Voice Input](docs/voice-input.md).
 
 ## Tests
 

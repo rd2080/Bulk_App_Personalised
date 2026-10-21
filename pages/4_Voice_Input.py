@@ -12,7 +12,7 @@ st.title("Voice Input & Meal Commands")
 st.caption("Speak your plan, review the transcription, then apply it to a selected date.")
 st.info(
     "Transcription uses your browser's built-in speech recognition. Routine meal "
-    "commands are processed with Python rules and do not call Gemini or OpenAI. "
+    "commands are processed with Python rules and do not call any AI provider. "
     "Browser vendors may handle speech recognition remotely."
 )
 
