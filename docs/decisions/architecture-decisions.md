@@ -35,3 +35,9 @@
 **Decision:** Start the database design with the agreed `weight_entries` table.
 
 **Reason:** Daily weight history is the first persistent feature. Its schema is described in [Database schema](../database/schema.md) and defined by migration `001_create_weight_entries.sql`.
+
+## Remove the legacy SQLite path (T-002)
+
+**Decision:** Remove `bulking_app/database.py`, `bulking_app/services/tools.py` and `tests/test_services.py`.
+
+**Reason:** They modelled an older SQLite design. A call-site trace found no live use in `app.py`, `pages/` or the Neon repositories; persistence is Neon PostgreSQL via `bulking_app/neon.py` and `bulking_app/repositories/`. Keeping a second, untested-in-production storage path risked confusion about the source of truth. The still-useful unknown-provider assertion for `get_planner` moved to `tests/test_ai_factory.py`.
