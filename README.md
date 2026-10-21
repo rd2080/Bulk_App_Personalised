@@ -22,6 +22,10 @@ Use Python 3.9+, install `requirements.txt`, configure `DATABASE_URL` with your 
 
 **Phase 3 — Deterministic Meal Commands:** reviewed text from the Voice Input page can populate or update the selected day's plan. Supported actions include a labeled multi-meal plan and explicit add, replace, and remove commands. The parser uses Python rules and does not call Gemini/OpenAI. Ambiguous requests ask for clarification. See [Voice Input](docs/voice-input.md).
 
+## Tests
+
+CI runs `python -m pytest -q` on every push. Locally, run `pip install -r requirements-dev.txt` and then `python -m pytest`. Pushing a `claude/*` branch triggers the Ship workflow (`.github/workflows/ship.yml`), which runs the tests and squash-merges into `main` only if they pass.
+
 ## Architecture and database
 
 The app uses the Neon connection helper (`bulking_app/neon.py`) and repository pattern. Profile data access and validation live in `bulking_app/repositories/user_profile.py`. AI request preparation lives in `bulking_app/ai/request_builder.py`; it does not itself call an AI provider.

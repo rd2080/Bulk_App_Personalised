@@ -3,7 +3,7 @@
 ## System components
 
 - **GitHub** is the versioned source for application code, PostgreSQL migrations, tests, and documentation.
-- **Streamlit** provides the Food Inventory, Morning Check-in, Voice Input, and Daily Meal Plan pages.
+- **Streamlit** provides the Profile, Food Inventory, Morning Check-in, Voice Input, and Daily Meal Plan pages (in that order).
 - **Neon PostgreSQL** provides persistent application data.
 - **The Neon connection helper** in `bulking_app/neon.py` reads deployment secrets and is shared by repository modules.
 - **Deterministic meal command processing** in `bulking_app/meal_commands.py` interprets a limited set of reviewed commands with Python rules. It has no Gemini/OpenAI dependency.
