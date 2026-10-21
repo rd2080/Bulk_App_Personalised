@@ -31,8 +31,8 @@ Migration `008_create_daily_meal_plans.sql` additively creates the plan header a
 ## Implementation
 
 - Persistence and validation: `bulking_app/repositories/meal_plan.py`
-- Daily manual editing: `pages/4_Daily_Meal_Plan.py`
+- Daily manual editing: `pages/5_Daily_Meal_Plan.py`
 - Deterministic command parser/application: `bulking_app/meal_commands.py`
-- Voice input and command confirmation: `pages/3_Voice_Input.py`
+- Voice input and command confirmation: `pages/4_Voice_Input.py`
 
 The parser supports labeled meal descriptions and explicit add/replace/remove instructions. Ambiguous snack references and duplicate meal slots prompt clarification. Meal contents remain text; this phase does not parse ingredients or calculate nutrition.
