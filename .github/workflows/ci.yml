@@ -1,11 +1,11 @@
 name: CI
 
+# Runs the test suite. Branch pushes are tested and shipped by ship.yml, which calls this workflow.
+
 on:
-  pull_request:
   push:
-    # claude/** so CI also runs on branches whose PRs are opened by Auto PR
-    # (PRs opened with the workflow token do not trigger pull_request workflows).
-    branches: [main, 'claude/**']
+    branches: [main]
+  workflow_call:
 
 jobs:
   test:

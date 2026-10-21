@@ -2,6 +2,10 @@
 
 Newest first. Each agent session appends what was done, what is blocked, and what needs an owner decision.
 
+## 2026-10-21 — Hands-off shipping
+- Owner is non-technical and wants to only text the agent, with no manual PR approval. PRs #4 and #5 merged. Replaced Auto PR with `ship.yml`: push `claude/**` → tests → auto PR → squash-merge. Local-computer tools were unavailable this session, so CI is the test runner.
+- T-001 done: CI green on the bug-fix branch (tests passed in the push run).
+
 ## 2026-10-21 — CI diagnosis and meal-command bug (T-001)
 - `pytest.ini` fix worked: collection now succeeds. CI then showed 35 passed, 1 failed (annotation text from the `claude/ci-visible-failures` run).
 - Real bug: `parse_meal_commands` omitted the `clarification` key for single-slot remove/replace/add, so `apply_meal_commands` raised `KeyError` for every such command in the app. Fixed (key always present, `.get` in apply) with regression tests. Not yet confirmed green in CI.
