@@ -2,6 +2,10 @@
 
 Newest first. Each agent session appends what was done, what is blocked, and what needs an owner decision.
 
+## 2026-10-21 — Auto PR workflow
+- The agent's PR connector returns 403 (app lacks pull-request write), but `git push` works. Added `.github/workflows/auto-pr.yml`: pushing a `claude/**` branch opens a PR into `main`; merging stays manual. CI now also runs on `claude/**` pushes.
+- One-time owner setting required: repo Settings → Actions → General → Workflow permissions → enable "Allow GitHub Actions to create and approve pull requests". Not yet verified working.
+
 ## 2026-10-21 — Handover documents merged
 - Read all seven handover PDFs. Distilled their rules into `CLAUDE.md`, reconciled `BACKLOG.md`, and listed decisions in `docs/decisions/open-decisions.md`. The PDFs themselves are not committed: the repo is public and they contain personal measurements.
 - Findings:
