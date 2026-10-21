@@ -11,7 +11,7 @@ Document any mismatch between code and requirements; never silently redefine a r
 - **This repo is public. Never commit personal data**: no weight, height, age, health or digestion notes, or diet specifics in code, tests, fixtures, docs, logs or PRs. Use synthetic data. Personal values live only in Neon.
 - Never touch the Neon `production` branch. Test on `claude-dev` (project `ancient-bonus-73336167`). `claude-dev` was copied from production on 2026-10-21 and contains real rows: never print or commit them. Applying a migration to production is a human step.
 - Never edit an existing migration. Add a new numbered file, update `docs/database/schema.md` and `database/migrations/README.md` in the same PR, make it additive, and note the recovery path for anything risky.
-- Never push to `main`, force-push, rewrite shared history or delete branches. Work on `claude/<task-id>-<slug>` branches and open a PR.
+- Never push directly to `main`, force-push, or rewrite shared history. Work on `claude/<task-id>-<slug>` branches and push them. The Ship workflow (`.github/workflows/ship.yml`) runs the tests and, when they pass, opens a PR and squash-merges it into `main` automatically; the owner does not review or approve merges. Add `[hold]` to the head commit message to test a branch without merging. Failed tests leave the branch unmerged: fix it, do not bypass CI. Merged code redeploys the live app, so keep changes small and tested.
 - SQL lives only in `bulking_app/repositories/` (parameterised, transactional where related writes must succeed together). Pages stay thin; logic lives in `bulking_app/services/`.
 - Every change needs tests in `tests/`, using synthetic data, and CI must pass.
 
@@ -33,7 +33,7 @@ Roles live in `.claude/agents/` (implementer, reviewer, db-guardian). One bounde
 1. Read `docs/PROGRESS.md` and `docs/decisions/open-decisions.md`; pick the earliest unblocked task in `docs/BACKLOG.md`.
 2. State scope, risk and acceptance criteria. Implement the smallest coherent change on a task branch.
 3. Run tests and review the diff for unrelated changes, secrets, deletions and unsafe migrations.
-4. Open a PR; update `docs/PROGRESS.md` and the backlog with evidence.
+4. Push the branch (Ship tests and merges it); confirm the run result with `gh run list`, and update `docs/PROGRESS.md` and the backlog with evidence.
 5. Continue, or stop when a real decision or blocker needs the owner.
 
 **Stop and ask** if an action could irreversibly delete or corrupt data, needs a production migration or deploy change, needs missing credentials, hits conflicting requirements, shows corruption or a security problem, cannot identify the authoritative schema, or hinges on a product trade-off.

@@ -12,5 +12,5 @@ Agents proceed with the recommended default unless the owner objects in PR revie
 | D6 | CSV export scope (foods, recipes, plans, logs) | Foods and recipes first, round-trip tested | T-061 (blocking) |
 | D7 | AI provider, consent and what context may be sent | Gemini free tier; compact profile summary only; user reviews before saving | T-050 |
 | D8 | Legacy SQLite code | Remove if no live call site, with a test update | T-002 (proceeds on default) |
-| D9 | Production migrations | Human step: owner applies (or approves a manual-dispatch workflow) after reviewing the PR and `claude-dev` evidence | all schema tasks |
+| D9 | Production migrations | Owner does not run commands and wants fast, hands-off merging (2026-10-21). Proposed: agents apply ADDITIVE migrations to production themselves after passing on `claude-dev`, taking a Neon backup branch first and applying BEFORE merging the code that needs them. Destructive changes still need explicit approval. Awaiting the owner's yes | all schema tasks (blocking until confirmed) |
 | D10 | Repo visibility | Make the repository private if it will hold anything personal | none |
