@@ -48,5 +48,28 @@ class ParseMealCommandsTests(unittest.TestCase):
         save_mock.assert_not_called()
 
 
+class SingleSlotCommandRegressionTests(unittest.TestCase):
+    def test_single_slot_commands_always_include_clarification_key(self):
+        for text in ("Change lunch to dal rice", "Add a banana to breakfast", "Remove dinner"):
+            with self.subTest(text=text):
+                parsed = parse_meal_commands(text)
+                self.assertIn("clarification", parsed)
+                self.assertIsNone(parsed["clarification"])
+
+    @patch("bulking_app.meal_commands.list_meals", return_value=[])
+    def test_apply_single_replace_creates_meal_when_slot_empty(self, _list_mock):
+        with patch("bulking_app.meal_commands.save_meal") as save_mock:
+            result = apply_meal_commands("Change lunch to dal rice", date(2026, 10, 11))
+        self.assertEqual(result["status"], "success")
+        save_mock.assert_called_once()
+
+    @patch("bulking_app.meal_commands.list_meals", return_value=[])
+    def test_apply_remove_on_empty_slot_changes_nothing(self, _list_mock):
+        with patch("bulking_app.meal_commands.delete_meal") as delete_mock:
+            result = apply_meal_commands("Remove dinner", date(2026, 10, 11))
+        self.assertEqual(result["status"], "success")
+        delete_mock.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
