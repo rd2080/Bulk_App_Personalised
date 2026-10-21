@@ -4,11 +4,11 @@ Status: `todo` | `doing` | `review` | `done` | `blocked`. Reconciled with the ow
 
 ## P0 Foundation and truth
 - T-001 `doing` Fix failing CI: `pytest -q` exits 2 on `main` (collection error suspected: repo root not on `sys.path`). Fix via `pytest.ini` + `python -m pytest`. Accept: green CI on the PR (QA-01, OPS-01).
-- T-002 `todo` Legacy SQLite path: `bulking_app/database.py` and `tests/test_services.py` model an older design. Trace call sites; remove or migrate, and document the decision (QA P0).
+- T-002 `done` Legacy SQLite path: `bulking_app/database.py` and `tests/test_services.py` model an older design. Trace call sites; remove or migrate, and document the decision (QA P0).
 - T-003 `todo` Postgres integration tests: apply migrations 001–008 to an isolated Neon branch and check constraints, FKs, check-in+weight atomic rollback, plan isolation, CSV atomicity. Must fail closed if the target URL is `production` (QA-03, QA-04, QA-05, QA-08, D-01..D-07). Needs a test `DATABASE_URL` secret for CI; agents use the Neon tools on `claude-dev`.
 - T-004 `todo` Migration runner: `scripts/apply_migrations.py` plus a `schema_migrations` table recording applied versions per environment (D-08, OPS-03). Agents run it on `claude-dev` only.
-- T-005 `todo` AI budget guard around `bulking_app/ai/`: cache, per-day call/token cap, deterministic fallback, minimal context (AC-14, D-12).
-- T-006 `todo` Hygiene: `requirements-dev.txt`, fix duplicate `1_` page prefixes, README test section.
+- T-005 `done` AI budget guard around `bulking_app/ai/`: cache, per-day call/token cap, deterministic fallback, minimal context (AC-14, D-12). Done (PR #9): callers must still catch `AIUnavailable`; counters are per-process.
+- T-006 `done` Hygiene: `requirements-dev.txt`, fix duplicate `1_` page prefixes, README test section.
 - T-007 `blocked` Verify the live Streamlit deployment and deployed commit (never verified in the handover). Needs the app URL from the owner.
 - T-008 `todo` Release runbook in `docs/ops/`: release record template, smoke checklist, rollback notes (Doc 06). Production migration stays a human step.
 

@@ -2,6 +2,11 @@
 
 Newest first. Each agent session appends what was done, what is blocked, and what needs an owner decision.
 
+## 2026-10-21 — Wave 1 merged (T-002, T-005, T-006)
+- T-002 (PR #7): legacy SQLite path removed; D8 closed. T-006 (PR #8): `requirements-dev.txt`, unique page prefixes, README tests section. T-005 (PR #9): AI budget guard (cache, daily call/token caps, safe failure) wired into `get_planner`. All three Ship runs green and squash-merged to `main` (`34c7b67`).
+- Not verified: live Streamlit deploy (needs app URL, T-007). Caps are per-process; no caller catches `AIUnavailable` yet (T-050).
+- Waiting on owner: D9 (production migrations) before any schema task; D2-D6.
+
 ## 2026-10-21 — Hands-off shipping
 - Owner is non-technical and wants to only text the agent, with no manual PR approval. PRs #4 and #5 merged. Replaced Auto PR with `ship.yml`: push `claude/**` → tests → auto PR → squash-merge. Local-computer tools were unavailable this session, so CI is the test runner.
 - T-001 done: CI green on the bug-fix branch (tests passed in the push run).
