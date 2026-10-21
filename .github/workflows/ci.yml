@@ -31,6 +31,12 @@ jobs:
           python-version: '3.11'
           cache: pip
       - run: pip install -r requirements-dev.txt
+      - name: Apply migrations to the throwaway database
+        run: |
+          for f in $(ls database/migrations/*.sql | sort); do
+            echo "applying $f"
+            psql "$SMOKE_DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$f"
+          done
       # python -m pytest puts the repo root on sys.path; -ra lists every failure/error reason.
       # On failure the tail of the output is published as an annotation so it is
       # readable without signing in to view the step logs.
