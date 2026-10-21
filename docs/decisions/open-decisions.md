@@ -14,3 +14,4 @@ Agents proceed with the recommended default unless the owner objects in PR revie
 | D8 | Legacy SQLite code | CLOSED: removed in T-002 (PR #7) | none |
 | D9 | Production migrations | Owner does not run commands and wants fast, hands-off merging (2026-10-21). Proposed: agents apply ADDITIVE migrations to production themselves after passing on `claude-dev`, taking a Neon backup branch first and applying BEFORE merging the code that needs them. Destructive changes still need explicit approval. Awaiting the owner's yes | all schema tasks (blocking until confirmed) |
 | D10 | Repo visibility | Make the repository private if it will hold anything personal | none |
+| D11 | AI scope after dropping OpenAI | Gemini only; see `docs/ai/scope.md`. Ship A1 (meal suggestions) then A2 (text to draft food entry); defer A3/A4; drop T-051. Awaiting the owner's pick | T-050, T-051, T-052 |

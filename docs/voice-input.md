@@ -1,10 +1,10 @@
 # Voice Input and Meal Commands (Phases 1 and 3)
 
-The **Voice Input** page lets you dictate a meal description, edit the transcription, and apply it to a selected date's saved meal plan. Speech recognition uses the browser Web Speech API. Routine command interpretation uses deterministic Python rules; it does not call Gemini or OpenAI.
+The **Voice Input** page lets you dictate a meal description, edit the transcription, and apply it to a selected date's saved meal plan. Speech recognition uses the browser Web Speech API. Routine command interpretation uses deterministic Python rules; it does not call any AI provider.
 
 ## Speech recognition and privacy
 
-The app does not send audio to Gemini, OpenAI, or a transcription API. This does not guarantee that recognition runs entirely on-device: browser vendors may process speech through their own services. Recognition support and quality vary by browser and device. Review browser speech-privacy settings before dictating sensitive details.
+The app does not send audio to any AI or transcription API. This does not guarantee that recognition runs entirely on-device: browser vendors may process speech through their own services. Recognition support and quality vary by browser and device. Review browser speech-privacy settings before dictating sensitive details.
 
 ## Use it
 

@@ -20,7 +20,4 @@ def _build_planner(provider: str | None) -> Planner:
     if selected == "gemini":
         from bulking_app.ai.gemini import GeminiPlanner
         return GeminiPlanner()
-    if selected == "openai":
-        from bulking_app.ai.openai_adapter import OpenAIPlanner
-        return OpenAIPlanner()
-    raise ValueError("AI_PROVIDER must be either 'gemini' or 'openai'.")
+    raise ValueError("AI_PROVIDER must be 'gemini' (the only supported provider).")

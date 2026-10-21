@@ -2,6 +2,9 @@
 
 Newest first. Each agent session appends what was done, what is blocked, and what needs an owner decision.
 
+## 2026-10-21 — OpenAI removed, AI re-scope proposed
+- Owner dropped the OpenAI SDK and asked to re-scope AI. Removed `openai_adapter.py`, the `openai` dependency, env vars and doc mentions; Gemini is the only provider. Proposed scope in `docs/ai/scope.md` (D11), awaiting the owner's pick.
+
 ## 2026-10-21 — Wave 1 merged (T-002, T-005, T-006)
 - T-002 (PR #7): legacy SQLite path removed; D8 closed. T-006 (PR #8): `requirements-dev.txt`, unique page prefixes, README tests section. T-005 (PR #9): AI budget guard (cache, daily call/token caps, safe failure) wired into `get_planner`. All three Ship runs green and squash-merged to `main` (`34c7b67`).
 - Not verified: live Streamlit deploy (needs app URL, T-007). Caps are per-process; no caller catches `AIUnavailable` yet (T-050).

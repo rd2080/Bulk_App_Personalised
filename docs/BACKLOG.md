@@ -34,8 +34,8 @@ Status: `todo` | `doing` | `review` | `done` | `blocked`. Reconciled with the ow
 - T-041 `todo` Deterministic weekly review (after T-021).
 
 ## P5 AI features (after T-005; Gemini free tier by default)
-- T-050 `todo` Advisory meal suggestions grounded in inventory, recipes and preferences: labelled as generated, context disclosed, regenerate/edit/accept/dismiss, safe failure (AC-14, AC-15).
-- T-051 `todo` Optional Claude provider adapter; default provider unchanged.
+- T-050 `blocked` (D11 scope pick) Advisory meal suggestions grounded in inventory, recipes and preferences: labelled as generated, context disclosed, regenerate/edit/accept/dismiss, safe failure (AC-14, AC-15).
+- T-051 `todo` Optional Claude provider adapter; default provider unchanged. Proposed: drop (D11).
 - T-052 `blocked` Calisthenics workout planning and logging (pull-up and dip bar only). Needs D4.
 
 ## P6 Later / undecided
