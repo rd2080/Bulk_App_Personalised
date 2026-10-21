@@ -2,8 +2,17 @@
 
 Newest first. Each agent session appends what was done, what is blocked, and what needs an owner decision.
 
+## 2026-10-21 — Handover documents merged
+- Read all seven handover PDFs. Distilled their rules into `CLAUDE.md`, reconciled `BACKLOG.md`, and listed decisions in `docs/decisions/open-decisions.md`. The PDFs themselves are not committed: the repo is public and they contain personal measurements.
+- Findings:
+  - CI run #1 (PR branch) and #2 (`main`) both failed in the `pytest -q` step with exit code 2, which usually means collection errors. Suspected cause: repo root not on `sys.path`. Fix proposed in this PR (`pytest.ini`, `python -m pytest`); unconfirmed until CI runs because step logs require sign-in.
+  - The agent sandbox cannot reach PyPI (proxy returns 403), so agents cannot run `pytest` locally here. CI is the test runner for sandbox sessions; local Claude Code on the owner's machine can run it directly.
+  - Documents 05 and 06 named in Doc 01 (roadmap/status, AI automation strategy) were not supplied. Files supplied as 05/06/07 are data model, deployment runbook and testing plan.
+  - No dedicated actual-consumption table exists (matches Doc 03): the main missing feature.
+  - `claude-dev` Neon branch is a copy of production taken 2026-10-21 and contains real rows.
+- Needs owner: D2, D3, D4, D5, D6 in `docs/decisions/open-decisions.md`; the Streamlit app URL (T-007); a test `DATABASE_URL` GitHub secret for T-003.
+
 ## 2026-10-21 — Setup
 - Audited repo (Streamlit + Neon, 8 migrations, 8 tables, a test file per module).
 - Neon: only `production` existed. Created `claude-dev` for agent testing.
-- Added CLAUDE.md, BACKLOG.md, this log, CI workflow.
-- Needs owner: ChatGPT/Codex docs (T-050); confirm AI provider/cost stance.
+- Added CLAUDE.md, BACKLOG.md, this log, CI workflow (PR #1, merged).

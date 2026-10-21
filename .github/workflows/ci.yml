@@ -15,4 +15,5 @@ jobs:
           python-version: '3.11'
           cache: pip
       - run: pip install -r requirements.txt pytest
-      - run: pytest -q
+      # python -m pytest puts the repo root on sys.path; -ra lists every failure/error reason.
+      - run: python -m pytest -q -ra --tb=short
