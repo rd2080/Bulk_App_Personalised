@@ -76,7 +76,7 @@ def parse_meal_commands(text: str) -> dict[str, Any]:
         target = _slot(remove_match.group(1))
         if target is None:
             return {"operations": [], "clarification": "Which snack do you mean: morning or afternoon?"}
-        return {"operations": [_operation("remove", target)]}
+        return {"operations": [_operation("remove", target)], "clarification": None}
 
     # Explicit replacement/update.
     replace_match = re.fullmatch(
@@ -94,7 +94,7 @@ def parse_meal_commands(text: str) -> dict[str, Any]:
             return {"operations": [], "clarification": "Which snack do you mean: morning or afternoon?"}
         if not content:
             return {"operations": [], "clarification": "What should I put in that meal?"}
-        return {"operations": [_operation("replace", target, content)]}
+        return {"operations": [_operation("replace", target, content)], "clarification": None}
 
     # Explicit addition to a slot.
     add_match = re.fullmatch(
@@ -111,7 +111,7 @@ def parse_meal_commands(text: str) -> dict[str, Any]:
             return {"operations": [], "clarification": "Which snack do you mean: morning or afternoon?"}
         if not content:
             return {"operations": [], "clarification": "What would you like to add?"}
-        return {"operations": [_operation("add", target, content)]}
+        return {"operations": [_operation("add", target, content)], "clarification": None}
 
     # Initial day plan / multiple slot declarations, e.g. "Breakfast: eggs.
     # For lunch, three rotis. Dinner will be dal rice."
@@ -152,7 +152,7 @@ def parse_meal_commands(text: str) -> dict[str, Any]:
 def apply_meal_commands(text: str, plan_date: date) -> dict[str, Any]:
     """Apply parsed commands to the existing plan, asking before ambiguous writes."""
     parsed = parse_meal_commands(text)
-    if parsed["clarification"]:
+    if parsed.get("clarification"):
         return {"status": "clarification", "message": parsed["clarification"], "changes": []}
 
     operations = parsed["operations"]

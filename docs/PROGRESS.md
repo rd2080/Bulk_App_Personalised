@@ -2,6 +2,11 @@
 
 Newest first. Each agent session appends what was done, what is blocked, and what needs an owner decision.
 
+## 2026-10-21 — CI diagnosis and meal-command bug (T-001)
+- `pytest.ini` fix worked: collection now succeeds. CI then showed 35 passed, 1 failed (annotation text from the `claude/ci-visible-failures` run).
+- Real bug: `parse_meal_commands` omitted the `clarification` key for single-slot remove/replace/add, so `apply_meal_commands` raised `KeyError` for every such command in the app. Fixed (key always present, `.get` in apply) with regression tests. Not yet confirmed green in CI.
+- Auto PR verified: a `claude/**` push opened PR #4 automatically. PRs opened by the workflow show CI as `action_required` for the `pull_request` event; the push-event CI run on the same commit is the real check.
+
 ## 2026-10-21 — Auto PR workflow
 - The agent's PR connector returns 403 (app lacks pull-request write), but `git push` works. Added `.github/workflows/auto-pr.yml`: pushing a `claude/**` branch opens a PR into `main`; merging stays manual. CI now also runs on `claude/**` pushes.
 - One-time owner setting required: repo Settings → Actions → General → Workflow permissions → enable "Allow GitHub Actions to create and approve pull requests". Not yet verified working.
