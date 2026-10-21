@@ -3,7 +3,9 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    # claude/** so CI also runs on branches whose PRs are opened by Auto PR
+    # (PRs opened with the workflow token do not trigger pull_request workflows).
+    branches: [main, 'claude/**']
 
 jobs:
   test:
