@@ -18,4 +18,19 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt pytest
       # python -m pytest puts the repo root on sys.path; -ra lists every failure/error reason.
-      - run: python -m pytest -q -ra --tb=short
+      # On failure the tail of the output is published as an annotation so it is
+      # readable without signing in to view the step logs.
+      - name: Run tests
+        run: |
+          set +e
+          python -m pytest -q -ra --tb=short 2>&1 | tee pytest.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            python - <<'PY'
+          import pathlib
+          text = pathlib.Path("pytest.log").read_text()[-3500:]
+          text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          print(f"::error title=pytest failed::{text}")
+          PY
+          fi
+          exit "$code"
