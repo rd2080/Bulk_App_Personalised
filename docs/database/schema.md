@@ -50,3 +50,25 @@ Numbered SQL files in `database/migrations/` are the versioned schema source of 
 ## Phase 3 — Deterministic meal commands
 
 Phase 3 reuses the existing `daily_meal_plans` and `planned_meals` tables. No schema change or migration is required. The parser stores each planned meal's description in the existing text columns; it does not normalize ingredients or add nutrition fields. See [Daily Meal Plan](../daily-meal-plan.md) and [Voice Input](../voice-input.md).
+
+## Meal Log — `meal_logs`
+
+What was actually eaten (decision D1). Plans never write here; a row exists only after an explicit logging action, and a log works without any plan. Migration `009_create_meal_logs.sql` is additive; persistence is `bulking_app/repositories/meal_log.py`.
+
+| Column | Type | Rule |
+|---|---|---|
+| `id` | `INTEGER` identity | Primary key |
+| `log_date` | `DATE` | Required; the owner's local (UTC+5:30) date |
+| `log_time` | `TIME` | Optional |
+| `item_type` | `TEXT` | `recipe`, `food` or `free_text` |
+| `recipe_id` / `food_id` | `INTEGER` | Optional FKs to `recipe_library` / `food_inventory` (`ON DELETE SET NULL`); only with the matching `item_type` |
+| `item_name` | `TEXT` | Required name snapshot, 1–160 characters |
+| `quantity`, `unit` | `NUMERIC(10,2)`, `TEXT` | Required, quantity > 0, unit non-empty; units are never mixed or summed across different units |
+| `calories_kcal`, `protein_g` | `NUMERIC(7,1)`, `NUMERIC(6,1)` | Nullable; NULL means unknown, never 0 |
+| `nutrition_source` | `TEXT` | `user_entered`, `calculated`, `estimate` or `unknown`; `unknown` exactly when both values are NULL |
+| `plan_meal_id` | `INTEGER` | Optional FK to `planned_meals` (`ON DELETE SET NULL`); set only when the owner picks a match |
+| `source` | `TEXT` | `manual` or `command` |
+| `deleted_at` | `TIMESTAMPTZ` | Soft delete; NULL = active. Deleted rows stay for visible history |
+| `created_at`, `updated_at` | `TIMESTAMPTZ` | Default `NOW()`; `updated_at` refreshed on edit and delete |
+
+Index `idx_meal_logs_date_active` serves the active-logs-by-date listing.
