@@ -2,6 +2,12 @@
 
 Newest first. Each agent session appends what was done, what is blocked, and what needs an owner decision.
 
+## 2026-10-22 — T-003 and T-011 done; T-012, T-013 in progress
+- T-003 done (PRs #18, #19): Postgres integration tests with host allowlist guard; skip without `SMOKE_DATABASE_URL`.
+- T-011 done (PR #20): migration 009 `meal_logs`, tested on `claude-dev` (applied twice, 17 columns, 3 indexes).
+- Production: backup branch `backup-20261022-009` made first; migration 009 applied 2026-10-22, verified 17 columns, 3 indexes, 0 rows, 9 public tables.
+- CI Ship run for T-011 green. T-012 and T-013 now in progress.
+
 ## 2026-10-22 — Phase 0: owner decisions recorded, team setup
 - Owner confirmed D3-D7, D9-D12 (see `docs/decisions/open-decisions.md`); D2 proceeds on default. AI = Claude, A1/A4 only; reminders = Telegram via GitHub Actions; agents may apply additive production migrations per `migration-procedure`.
 - CLAUDE.md slimmed; procedures moved to `.claude/skills/` (migration-procedure, ship-and-verify, report-format, ai-feature-rules, food-data-rules). Agents now schema/builder/reviewer/ci-watcher/docs-writer with explicit model and effort; `.claude/settings.json` added.
