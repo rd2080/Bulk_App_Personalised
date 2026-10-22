@@ -194,7 +194,8 @@ def _is_retry(existing: dict[str, Any], entry: dict[str, Any], now: datetime) ->
 
 
 def log_from_command(text: str, log_date: Any, foods: list[dict[str, Any]], *,
-                     allow_free_text: bool = False, now: datetime | None = None) -> dict[str, Any]:
+                     allow_free_text: bool = False, allow_duplicate: bool = False,
+                     now: datetime | None = None) -> dict[str, Any]:
     """Log "I ate three eggs". Deterministic; asks instead of guessing.
 
     Status: "logged", "duplicate" (a retry within RETRY_WINDOW, nothing written) or
@@ -225,7 +226,8 @@ def log_from_command(text: str, log_date: Any, foods: list[dict[str, Any]], *,
         existing = meal_log.list_logs(log_date)
     except Exception as exc:
         raise LogWriteError("Could not check today's log. Nothing was recorded.") from exc
-    for log in existing:
+    # allow_duplicate is an explicit owner choice to log again despite the retry window.
+    for log in [] if allow_duplicate else existing:
         if _is_retry(log, entry, now):
             return {"status": "duplicate", "log": log,
                     "message": "Already logged a moment ago, so I did not add it again."}
@@ -242,6 +244,12 @@ def undo_last_command(log_date: Any) -> dict[str, Any] | None:
     target = max(commands, key=lambda x: x["id"])
     remove_entry(target["id"])
     return target
+
+
+def undo_message(entry: dict[str, Any] | None) -> str:
+    if not entry:
+        return "No typed entry to undo for this day."
+    return f"Undone: {entry['item_name']} ({format_quantity(entry)}) was removed."
 
 
 def format_value(value: Any, suffix: str) -> str:

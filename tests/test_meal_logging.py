@@ -1,5 +1,6 @@
 """Meal logging service tests. Synthetic data only; repository is mocked."""
 
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 import pytest
@@ -138,3 +139,49 @@ def test_edit_unit_relabels_calculated_as_estimate():
 
 def test_edit_typed_nutrition_is_user_entered():
     assert svc.edited_entry(_calc_log(), "Test bowl", 100, "g", "250", "10")["nutrition_source"] == "user_entered"
+
+
+# --- typed commands: override and undo ---
+_NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+_FOODS = [{"id": 1, "food_name": "Egg", "unit": "piece", "calories_kcal": None, "protein_g": None}]
+
+
+def _recent_log(**kw):
+    base = {"id": 7, "item_name": "egg", "quantity": 3, "unit": "piece", "source": "command",
+            "created_at": _NOW}
+    return {**base, **kw}
+
+
+def test_command_duplicate_blocked_by_default():
+    with patch.object(svc.meal_log, "list_logs", return_value=[_recent_log()]), \
+            patch.object(svc.meal_log, "create_log") as create:
+        res = svc.log_from_command("I ate 3 eggs", "d", _FOODS, now=_NOW)
+    assert res["status"] == "duplicate"
+    create.assert_not_called()
+
+
+def test_command_duplicate_override_logs_again():
+    with patch.object(svc.meal_log, "list_logs", return_value=[_recent_log()]), \
+            patch.object(svc.meal_log, "create_log", return_value=8) as create, \
+            patch.object(svc.meal_log, "get_log", return_value=_recent_log(id=8)):
+        res = svc.log_from_command("I ate 3 eggs", "d", _FOODS, now=_NOW, allow_duplicate=True)
+    assert res["status"] == "logged"
+    create.assert_called_once()
+
+
+def test_undo_message_names_entry():
+    msg = svc.undo_message({"item_name": "Egg", "quantity": 3, "unit": "piece"})
+    assert "Egg" in msg and "removed" in msg
+
+
+def test_undo_message_when_nothing():
+    assert "No typed entry" in svc.undo_message(None)
+
+
+def test_undo_last_command_removes_newest_command_only():
+    logs = [_recent_log(id=1), _recent_log(id=5), _recent_log(id=9, source="manual")]
+    with patch.object(svc.meal_log, "list_logs", return_value=logs), \
+            patch.object(svc, "remove_entry") as rm:
+        undone = svc.undo_last_command("d")
+    assert undone["id"] == 5
+    rm.assert_called_once_with(5)
