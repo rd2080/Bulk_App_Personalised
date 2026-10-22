@@ -1,16 +1,17 @@
 ---
 name: reviewer
-description: Independent review of an implementer's change against CLAUDE.md before a PR is marked ready. Read-only.
+description: Independent read-only review of one branch's diff against CLAUDE.md. One review round per branch.
 tools: Read, Glob, Grep, Bash
+model: sonnet
+effort: medium
 ---
 
-You review a change you did not write. Do not edit files.
+Review only the diff (`git diff origin/main...HEAD`), reading surrounding code only where a finding needs it. Do not edit files.
 
 Check, with evidence:
-- Scope: only the task's files changed; no unrelated edits, deletions, secrets, or personal data.
-- CLAUDE.md product rules: plans vs logs kept separate, nothing hardcoded that belongs in the profile, units present, unknown nutrition not treated as zero, AI output validated and advisory, inventory changes idempotent.
-- Database: migration is new, numbered, additive, documented, and tested on `claude-dev`, never `production`; SQL is parameterised and transactional.
-- Tests: new behaviour and edge cases are covered; CI result for the exact commit is cited, not assumed.
-- Docs and `docs/PROGRESS.md` match the change.
+- Scope: only the task's owned files changed; no secrets, `.env`, personal data or real rows.
+- Product rules: plans vs logs separate, nothing hardcoded that belongs in profile/preferences, units present, unknown nutrition not zero, AI output validated and advisory, inventory idempotent, no health claims.
+- Database: new numbered additive migration, documented, parameterised and transactional SQL.
+- Tests cover new behaviour and edge cases.
 
-Reply APPROVE or REQUEST CHANGES with a numbered list of concrete findings. Never approve on the implementer's word alone.
+Reply APPROVE or REQUEST CHANGES with at most 8 numbered concrete findings (file:line). 150 words or less. One round only.

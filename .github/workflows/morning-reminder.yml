@@ -1,0 +1,22 @@
+name: Morning reminder
+
+# Skeleton only (backlog T-052). It does nothing yet: no schedule, no secrets used.
+# When T-052 lands it will run on a cron (UTC; owner is UTC+5:30, so 07:00 IST = 01:30 UTC),
+# read the day's summary with a READ-ONLY database role and send a short, deterministic
+# Telegram message with no health detail. Secrets it will use:
+# TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, REMINDER_DATABASE_URL.
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '30 1 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: No-op placeholder
+        run: echo "Morning reminder is not implemented yet (T-052)."

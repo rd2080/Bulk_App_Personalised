@@ -1,17 +1,18 @@
-# Open owner decisions
+# Owner decisions
 
-Agents proceed with the recommended default unless the owner objects in PR review, except where a decision is marked blocking.
+Owner-confirmed on 2026-10-22 unless noted. Agents do not re-ask decided items. Open items proceed on the recommended default unless the owner objects.
 
-| ID | Decision | Recommended default | Blocks |
+| ID | Decision | Status and outcome | Affects |
 |---|---|---|---|
-| D1 | Meal-log model: date boundary, edits/deletes, plan linking | Local-time date + optional time; edits keep `updated_at`; deletes are soft with a visible history; link to a plan only when the owner picks a match | T-010..T-014 (proceeds on default) |
-| D2 | Where configurable preferences live (eggs, exclusions, shakes, budget, equipment, timing) | New additive `user_preferences` table; leave `user_profile` at its ten agreed fields | T-030 (blocking) |
-| D3 | How intake targets are set | Owner-entered targets with visible assumptions; no auto-escalation; show a clinician/dietitian note. Owner should also confirm the profile's weight, height and age are current | T-022 (blocking) |
-| D4 | Workout scope | Plan and log calisthenics sessions with pull-up/dip bar only | T-052 (blocking) |
-| D5 | Reminders: channel, runtime, quiet hours | In-app only first; no background delivery until a scheduler is chosen | T-060 (blocking) |
-| D6 | CSV export scope (foods, recipes, plans, logs) | Foods and recipes first, round-trip tested | T-061 (blocking) |
-| D7 | AI provider, consent and what context may be sent | Gemini free tier; compact profile summary only; user reviews before saving | T-050 |
+| D1 | Meal-log model: date boundary, edits/deletes, plan linking | Recommended default: local-time (UTC+5:30) date + optional time; edits keep `updated_at`; soft deletes with visible history; link to a plan only when the owner picks a match | Backlog 1 |
+| D2 | Where configurable preferences live | Recommended default (proceed): new additive `user_preferences` table; `user_profile` keeps its ten fields | Backlog 3, 6 |
+| D3 | Intake targets | DECIDED: the app suggests targets with a deterministic formula (no AI). Shows assumptions, labelled estimates, conservative surplus, clinician/dietitian note, owner can override. Body measurements never go to an AI provider | Backlog 3 |
+| D4 | Workout scope | DECIDED: calisthenics plan creation and logging, pull-up bar and dip bar only. Beginner: deterministic conservative skeleton, AI ideas inside it (A4), Python validates, owner accepts or edits. Recommend a trainer review of the first plan | Backlog 4, 6 |
+| D5 | Reminders | DECIDED: free Telegram bot, sent by a scheduled GitHub Actions workflow (cron in UTC; owner is UTC+5:30). Secrets `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and a read-only database role URL. Messages deterministic, minimal, no health detail. Owner gets click-by-click setup steps when ready | Backlog 5, 7 |
+| D6 | CSV and food data | DECIDED: CSV is for the first food import only. Food data built on IFCT 2017 (542 foods, cooking yields), older MIT-licensed version preferred, licence recorded. Recipe nutrition computed in Python. Gaps: manual entry or Open Food Facts. AI estimate only as last resort, labelled "AI estimate, unverified", never auto-saved. Unknown stays unknown | Backlog 2 |
+| D7 | AI provider, consent and context | DECIDED: Claude API, Haiku-class model by default, one structured request per feature, generated once per day and cached, through the budget guard (`AI_MAX_CALLS_PER_DAY=5`, token cap). Minimal context: available foods, preference labels, remaining macro numbers, equipment, baseline ability numbers; never weight, health or digestion notes. Validated output, deterministic fallback. Key only in Streamlit and GitHub secrets. Owner sets a monthly spend limit in the Anthropic Console | Backlog 6 |
 | D8 | Legacy SQLite code | CLOSED: removed in T-002 (PR #7) | none |
-| D9 | Production migrations | Owner does not run commands and wants fast, hands-off merging (2026-10-21). Proposed: agents apply ADDITIVE migrations to production themselves after passing on `claude-dev`, taking a Neon backup branch first and applying BEFORE merging the code that needs them. Destructive changes still need explicit approval. Awaiting the owner's yes | all schema tasks (blocking until confirmed) |
-| D10 | Repo visibility | Make the repository private if it will hold anything personal | none |
-| D11 | AI scope after dropping OpenAI | Gemini only; see `docs/ai/scope.md`. Ship A1 (meal suggestions) then A2 (text to draft food entry); defer A3/A4; drop T-051. Awaiting the owner's pick | T-050, T-051, T-052 |
+| D9 | Production migrations | DECIDED: agents apply ADDITIVE migrations to production after passing on `claude-dev`, after a Neon backup branch, and before merging the code that needs them (`migration-procedure` skill). Anything deleting or altering existing data needs explicit owner approval. Data wipe: only when the owner says the new tables are ready, after a backup, with one final confirmation; afterwards reset `claude-dev` from production. Never print real rows | all schema work |
+| D10 | Repo visibility | DECIDED: owner makes the repo private. Rule unchanged: no personal data in the repo, synthetic test data only | none |
+| D11 | AI scope | DECIDED: only A1 (meal suggestions/diet plans) and A4 (calisthenics workout ideas). A2 and A3 dropped. Remove Gemini code and the `google-genai` dependency (OpenAI already gone). See `docs/ai/scope.md` | Backlog 6 |
+| D12 | Check-in cadence | DECIDED: daily light check-in (sleep, soreness, optional weight); weekly check-in on Saturday for weight and progress, stored at weekly level. One weigh-in is not a trend. Cadence and fields configurable | Backlog 5 |
