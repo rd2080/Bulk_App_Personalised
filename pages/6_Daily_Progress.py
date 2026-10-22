@@ -32,6 +32,8 @@ def show(label: str, unit: str, data: dict) -> None:
     st.metric(label, eaten)
     if data["target"] is None:
         st.caption("No target set.")
+    elif data["percent"] is None:
+        st.caption(f"Target {data['target']:g} {unit}; progress unknown.")
     else:
         st.progress(min(data["percent"] / 100, 1.0))
         st.caption(f"{data['percent']:g}% of {data['target']:g} {unit}; "

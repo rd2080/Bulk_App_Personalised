@@ -51,3 +51,15 @@ def test_uses_only_injected_logs_not_plans():
 
 def test_estimates_flagged():
     assert summarise([log(100, 5, "estimate")])["includes_estimates"]
+
+
+def test_unknown_eaten_gives_unknown_percent_not_zero():
+    r = summarise([log(None, None, "unknown")], target_kcal=1000, target_protein_g=50)
+    assert r["calories"]["percent"] is None and r["calories"]["remaining"] is None
+    assert r["protein"]["percent"] is None and r["calories"]["target"] == 1000
+
+
+def test_zero_or_negative_target_does_not_crash():
+    for bad in (0, -5):
+        r = summarise([log(100, 5)], target_kcal=bad, target_protein_g=bad)
+        assert r["calories"]["target"] is None and r["protein"]["percent"] is None

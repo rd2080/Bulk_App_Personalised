@@ -33,11 +33,12 @@ def _vs_target(eaten: float | None, target: Any) -> dict[str, Any]:
     if target is None or float(target) <= 0:
         return {"target": None, "remaining": None, "percent": None}
     goal = float(target)
-    done = eaten or 0.0
+    if eaten is None:
+        return {"target": goal, "remaining": None, "percent": None}
     return {
         "target": goal,
-        "remaining": round(max(goal - done, 0.0), 1),
-        "percent": round(done / goal * 100, 1),
+        "remaining": round(max(goal - eaten, 0.0), 1),
+        "percent": round(eaten / goal * 100, 1),
     }
 
 
