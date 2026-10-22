@@ -35,6 +35,50 @@ def _text(value):
     return "" if value is None else f"{value:g}"
 
 
+if "flash" in st.session_state:
+    st.success(st.session_state.pop("flash"))
+
+
+def _command(text, allow_free_text=False, allow_duplicate=False):
+    try:
+        res = svc.log_from_command(text, log_date, foods, allow_free_text=allow_free_text,
+                                   allow_duplicate=allow_duplicate)
+    except (RuntimeError, ValueError) as exc:
+        st.error(str(exc))
+        return
+    if res["status"] == "logged":
+        saved = res["log"]  # add_entry only returns after a verified read-back
+        st.session_state["flash"] = f"Saved: {saved['item_name']} ({svc.format_quantity(saved)}). {res['message']}"
+        st.session_state.pop("pending_cmd", None)
+        st.rerun()
+    st.session_state["pending_cmd"] = {"text": text, "status": res["status"], "message": res["message"]}
+
+
+with st.container(border=True):
+    with st.form("command_form", clear_on_submit=True):
+        cmd_text = st.text_input("Type what you ate", placeholder="I ate three eggs", max_chars=160)
+        if st.form_submit_button("Log it", type="primary", use_container_width=True) and cmd_text.strip():
+            _command(cmd_text)
+    pending = st.session_state.get("pending_cmd")
+    if pending:
+        if pending["status"] == "duplicate":
+            st.info(pending["message"])
+            if st.button("Log it again anyway", key="cmd_again", use_container_width=True):
+                _command(pending["text"], allow_duplicate=True)
+        else:
+            st.warning(pending["message"])
+            if "not in your foods" in pending["message"] and st.button(
+                    "Log it as typed", key="cmd_free", type="primary", use_container_width=True):
+                _command(pending["text"], allow_free_text=True)
+    if st.button("Undo last typed entry", key="cmd_undo", use_container_width=True):
+        def _undo():
+            undone = svc.undo_last_command(log_date)
+            st.session_state["flash"] = svc.undo_message(undone)
+            st.session_state.pop("pending_cmd", None)
+        if _run(_undo):
+            st.rerun()
+
+
 with st.expander("Add what I ate", expanded=not summary["logs"]):
     kind = st.radio("Add from", ["Recipe", "Food", "Something else"], horizontal=True)
     with st.form("add_log", clear_on_submit=True):
@@ -71,9 +115,6 @@ with st.expander("Add what I ate", expanded=not summary["logs"]):
                 st.session_state["flash"] = f"Saved: {saved['item_name']} ({svc.format_quantity(saved)})."
             if _run(_add):
                 st.rerun()
-
-if "flash" in st.session_state:
-    st.success(st.session_state.pop("flash"))
 
 st.subheader(f"Eaten on {log_date.isoformat()}")
 st.caption(
