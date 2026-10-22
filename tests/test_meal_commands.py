@@ -71,5 +71,88 @@ class SingleSlotCommandRegressionTests(unittest.TestCase):
         delete_mock.assert_not_called()
 
 
+# --- "I ate ..." commands (synthetic data) ---
+from datetime import datetime, timedelta, timezone  # noqa: E402
+
+from bulking_app.meal_commands import parse_eaten_command  # noqa: E402
+from bulking_app.services import meal_logging as svc  # noqa: E402
+
+NOW = datetime(2026, 10, 11, 12, 0, tzinfo=timezone.utc)
+FOODS = [{"id": 1, "food_name": "Egg"}, {"id": 2, "food_name": "Rice"}]
+
+
+def _saved(**kw):
+    base = {"id": 9, "item_name": "Egg", "quantity": 3.0, "unit": "piece",
+            "source": "command", "created_at": NOW - timedelta(seconds=30)}
+    return {**base, **kw}
+
+
+def test_parse_word_count_defaults_to_piece():
+    r = parse_eaten_command("I ate three eggs")
+    assert (r["status"], r["item_name"], r["quantity"], r["unit"]) == ("ok", "eggs", 3.0, "piece")
+
+
+def test_parse_grams():
+    r = parse_eaten_command("had 200 g of rice.")
+    assert (r["item_name"], r["quantity"], r["unit"]) == ("rice", 200.0, "g")
+
+
+def test_parse_missing_amount_asks():
+    assert parse_eaten_command("I ate eggs")["status"] == "clarification"
+    assert parse_eaten_command("I ate")["status"] == "clarification"
+    assert parse_eaten_command("I ate 2 eggs and rice")["status"] == "clarification"
+    assert parse_eaten_command("hello")["status"] == "clarification"
+
+
+def test_log_from_command_known_food_unknown_nutrition():
+    with patch.object(svc.meal_log, "list_logs", return_value=[]), \
+         patch.object(svc.meal_log, "create_log", return_value=9) as create, \
+         patch.object(svc.meal_log, "get_log", return_value=_saved()):
+        r = svc.log_from_command("I ate three eggs", "2026-10-11", FOODS, now=NOW)
+    assert r["status"] == "logged"
+    kw = create.call_args.kwargs
+    assert kw["source"] == "command" and kw["food_id"] == 1
+    assert kw["calories_kcal"] is None and kw["nutrition_source"] == "unknown"
+
+
+def test_unknown_food_asks_unless_confirmed():
+    with patch.object(svc.meal_log, "create_log") as create:
+        r = svc.log_from_command("I ate 2 pears", "2026-10-11", FOODS, now=NOW)
+    assert r["status"] == "clarification"
+    create.assert_not_called()
+    with patch.object(svc.meal_log, "list_logs", return_value=[]), \
+         patch.object(svc.meal_log, "create_log", return_value=9) as create, \
+         patch.object(svc.meal_log, "get_log", return_value=_saved(item_name="pears")):
+        r = svc.log_from_command("I ate 2 pears", "2026-10-11", FOODS, allow_free_text=True, now=NOW)
+    assert r["status"] == "logged" and create.call_args.kwargs["item_type"] == "free_text"
+
+
+def test_retry_does_not_log_twice():
+    with patch.object(svc.meal_log, "list_logs", return_value=[_saved()]), \
+         patch.object(svc.meal_log, "create_log") as create:
+        r = svc.log_from_command("I ate three eggs", "2026-10-11", FOODS, now=NOW)
+    assert r["status"] == "duplicate"
+    create.assert_not_called()
+
+
+def test_same_command_later_is_a_new_meal():
+    old = _saved(created_at=NOW - timedelta(hours=3))
+    with patch.object(svc.meal_log, "list_logs", return_value=[old]), \
+         patch.object(svc.meal_log, "create_log", return_value=10) as create, \
+         patch.object(svc.meal_log, "get_log", return_value=_saved(id=10)):
+        r = svc.log_from_command("I ate three eggs", "2026-10-11", FOODS, now=NOW)
+    assert r["status"] == "logged"
+    create.assert_called_once()
+
+
+def test_undo_last_command_soft_deletes_newest():
+    logs = [_saved(id=3), _saved(id=7), _saved(id=8, source="manual")]
+    with patch.object(svc.meal_log, "list_logs", return_value=logs), \
+         patch.object(svc.meal_log, "soft_delete_log", return_value=True) as delete, \
+         patch.object(svc.meal_log, "get_log", return_value=None):
+        assert svc.undo_last_command("2026-10-11")["id"] == 7
+    delete.assert_called_once_with(7)
+
+
 if __name__ == "__main__":
     unittest.main()

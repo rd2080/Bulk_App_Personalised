@@ -243,3 +243,83 @@ def apply_meal_commands(text: str, plan_date: date) -> dict[str, Any]:
             changes.append(f"Added {target.lower()}: {content}.")
 
     return {"status": "success", "message": "Meal plan updated.", "changes": changes}
+
+
+# ---------------------------------------------------------------------------
+# "I ate ..." commands: parsing only (no database access, no guessing).
+# ---------------------------------------------------------------------------
+_NUMBER_WORDS = {
+    "a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+    "seven": 7, "eight": 8, "nine": 9, "ten": 10, "half": 0.5,
+}
+_UNIT_ALIASES = {
+    "g": "g", "gm": "g", "gram": "g", "grams": "g", "kg": "kg", "ml": "ml", "l": "l",
+    "litre": "l", "litres": "l", "liter": "l", "liters": "l",
+    "cup": "cup", "cups": "cup", "bowl": "bowl", "bowls": "bowl", "glass": "glass",
+    "glasses": "glass", "tbsp": "tbsp", "tsp": "tsp", "scoop": "scoop", "scoops": "scoop",
+    "slice": "slice", "slices": "slice", "piece": "piece", "pieces": "piece",
+}
+_EAT_PREFIX = re.compile(
+    r"^(?:please\s+)?(?:i\s+)?(?:just\s+)?(?:have\s+)?(?:ate|eaten|had|have)\s+",
+    re.IGNORECASE,
+)
+
+
+def _singular(word: str) -> str:
+    word = word.lower()
+    if word.endswith("ies") and len(word) > 4:
+        return word[:-3] + "y"
+    if word.endswith("oes") and len(word) > 4:
+        return word[:-2]
+    if word.endswith("s") and not word.endswith("ss") and len(word) > 3:
+        return word[:-1]
+    return word
+
+
+def normalize_food_name(name: str) -> str:
+    return " ".join(_singular(w) for w in re.sub(r"[^a-z0-9 ]", " ", name.lower()).split())
+
+
+def _clarify(message: str) -> dict[str, Any]:
+    return {"status": "clarification", "message": message}
+
+
+def parse_eaten_command(text: str) -> dict[str, Any]:
+    """Parse "I ate three eggs" / "had 200 g rice" into name, quantity and unit.
+
+    Returns {"status": "ok", "item_name", "quantity", "unit"} or
+    {"status": "clarification", "message"}. A missing amount or food is asked,
+    never guessed. A bare count ("three eggs") is counted in "piece".
+    """
+    source = re.sub(r"\s+", " ", (text or "").strip()).rstrip(".!")
+    if not source:
+        return _clarify("Type what you ate, for example: I ate three eggs.")
+    match = _EAT_PREFIX.match(source)
+    if not match:
+        return _clarify("I only log commands like 'I ate three eggs' or 'had 200 g rice'.")
+    rest = source[match.end():].strip()
+    if "," in rest or re.search(r"\s(?:and|with|plus|\+)\s", rest, re.IGNORECASE):
+        return _clarify("Please log one food at a time so each amount is clear.")
+    digits = re.match(r"(\d+(?:\.\d+)?)\s*([a-z]*)\s*(.*)$", rest, re.IGNORECASE)
+    unit: str | None = None
+    if digits:
+        quantity = float(digits.group(1))
+        word, tail = digits.group(2).lower(), digits.group(3)
+        if word in _UNIT_ALIASES:
+            unit, name = _UNIT_ALIASES[word], tail
+        else:
+            name = f"{word} {tail}".strip()
+    else:
+        first, _, tail = rest.partition(" ")
+        if first.lower() not in _NUMBER_WORDS:
+            return _clarify("How much did you eat? Add an amount, for example 'three eggs' or '200 g rice'.")
+        quantity, name = float(_NUMBER_WORDS[first.lower()]), tail
+        word, _, tail2 = tail.partition(" ")
+        if word.lower() in _UNIT_ALIASES:
+            unit, name = _UNIT_ALIASES[word.lower()], tail2
+    name = re.sub(r"^of\s+", "", name.strip(), flags=re.IGNORECASE).strip(" ,.;:")
+    if not name:
+        return _clarify("What did you eat?")
+    if quantity <= 0:
+        return _clarify("The amount must be greater than zero.")
+    return {"status": "ok", "item_name": name, "quantity": quantity, "unit": unit or "piece"}
