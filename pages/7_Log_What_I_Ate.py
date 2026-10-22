@@ -52,15 +52,14 @@ with st.expander("Add what I ate", expanded=not summary["logs"]):
             qty = st.number_input("Amount", min_value=0.0, step=0.5, format="%g")
             unit = st.text_input("Unit", value=(pick or {}).get("unit") or "", placeholder="g, piece, cup")
             if pick:
-                entry_fn = lambda: svc.food_entry(pick, qty, unit)  # noqa: E731
+                entry_fn = lambda: svc.food_entry(pick, qty, unit, extra_kcal, extra_protein)  # noqa: E731
             else:
                 st.info("No foods saved yet.")
         else:
             name = st.text_input("What did you eat?", max_chars=160)
             qty = st.number_input("Amount", min_value=0.0, step=0.5, format="%g")
             unit = st.text_input("Unit", placeholder="g, piece, cup")
-            entry_fn = lambda: {"item_type": "free_text", "item_name": name,  # noqa: E731
-                                "quantity": qty, "unit": unit}
+            entry_fn = lambda: svc.free_text_entry(name, qty, unit, extra_kcal, extra_protein)  # noqa: E731
         extra_kcal = extra_protein = None
         if kind != "Recipe":
             st.caption("Nutrition stays unknown unless you enter it.")
@@ -68,11 +67,7 @@ with st.expander("Add what I ate", expanded=not summary["logs"]):
             extra_protein = st.text_input("Protein g (optional)", placeholder="leave blank if unknown")
         if st.form_submit_button("Add", type="primary", use_container_width=True) and entry_fn:
             def _add():
-                entry = entry_fn()
-                if extra_kcal or extra_protein:
-                    entry.update(calories_kcal=extra_kcal or None, protein_g=extra_protein or None,
-                                 nutrition_source="user_entered")
-                saved = svc.add_entry(log_date, entry)
+                saved = svc.add_entry(log_date, entry_fn())
                 st.session_state["flash"] = f"Saved: {saved['item_name']} ({svc.format_quantity(saved)})."
             if _run(_add):
                 st.rerun()
@@ -107,15 +102,8 @@ for log in summary["logs"]:
                 save, cancel, remove = st.columns(3)
                 if save.form_submit_button("Save", type="primary"):
                     def _save():
-                        changed = (kcal, prot) != (_text(log["calories_kcal"]), _text(log["protein_g"]))
-                        source = "user_entered" if changed else log["nutrition_source"]
-                        svc.edit_entry(log["id"], log_date, {
-                            "item_type": log["item_type"], "recipe_id": log["recipe_id"],
-                            "food_id": log["food_id"], "plan_meal_id": log["plan_meal_id"],
-                            "item_name": name, "quantity": qty, "unit": unit,
-                            "calories_kcal": kcal or None, "protein_g": prot or None,
-                            "nutrition_source": source if (kcal or prot) else "unknown"},
-                            log["log_time"])
+                        entry = svc.edited_entry(log, name, qty, unit, kcal, prot)
+                        svc.edit_entry(log["id"], log_date, entry, log["log_time"])
                         st.session_state.pop("editing_log", None)
                         st.session_state["flash"] = "Changes saved."
                     if _run(_save):
@@ -124,9 +112,19 @@ for log in summary["logs"]:
                     st.session_state.pop("editing_log", None)
                     st.rerun()
                 if remove.form_submit_button("Remove"):
-                    def _remove():
-                        svc.remove_entry(log["id"])
-                        st.session_state.pop("editing_log", None)
-                        st.session_state["flash"] = "Entry removed."
-                    if _run(_remove):
-                        st.rerun()
+                    st.session_state["confirm_remove"] = log["id"]
+                    st.rerun()
+        if st.session_state.get("confirm_remove") == log["id"]:
+            st.warning("Remove this entry? It will no longer count toward today.")
+            yes, no = st.columns(2)
+            if yes.button("Yes, remove", key=f"yes_{log['id']}", type="primary"):
+                def _remove():
+                    svc.remove_entry(log["id"])
+                    st.session_state.pop("confirm_remove", None)
+                    st.session_state.pop("editing_log", None)
+                    st.session_state["flash"] = "Entry removed."
+                if _run(_remove):
+                    st.rerun()
+            if no.button("Keep it", key=f"no_{log['id']}"):
+                st.session_state.pop("confirm_remove", None)
+                st.rerun()
