@@ -19,6 +19,18 @@ def test_guard_refuses_production_url(monkeypatch):
         c.check_url()
 
 
+def test_guard_rejects_non_allowlisted_host(monkeypatch):
+    monkeypatch.delenv("SMOKE_ALLOW_HOST", raising=False)
+    monkeypatch.setenv("SMOKE_DATABASE_URL", "postgresql://u:p@db.example.com/ci")
+    with pytest.raises(pytest.fail.Exception):
+        c.check_url()
+    monkeypatch.setenv("SMOKE_ALLOW_HOST", "db.example.com")
+    assert c.check_url().endswith("/ci")
+    monkeypatch.setenv("SMOKE_DATABASE_URL", "postgresql://u:p@localhost/production")
+    with pytest.raises(pytest.fail.Exception):
+        c.check_url()
+
+
 def test_guard_skips_without_url(monkeypatch):
     monkeypatch.delenv("SMOKE_DATABASE_URL", raising=False)
     with pytest.raises(pytest.skip.Exception):
@@ -84,12 +96,16 @@ def test_checkin_and_weight_rollback_together(conn):
 
 
 def test_repository_checkin_is_atomic(db_url, monkeypatch):
+    from bulking_app import neon
     from bulking_app.repositories import morning_checkin as repo
 
     monkeypatch.setenv("DATABASE_URL", db_url)
+    assert neon.database_url() == db_url  # repository hits the throwaway DB only
     day = date(2031, 3, 3)
-    admin = psycopg.connect(db_url, autocommit=True)
+    admin = psycopg.connect(db_url, autocommit=True)  # every statement commits
     try:
+        admin.execute("DELETE FROM daily_checkins WHERE checkin_date=%s", (day,))
+        admin.execute("DELETE FROM weight_entries WHERE entry_date=%s", (day,))
         repo.save_morning_checkin(checkin_date=day, weight_kg=70.5, sleep_hours=7,
                                   soreness_level=3)
         assert float(repo.get_morning_checkin(day)["weight_kg"]) == 70.5
@@ -97,16 +113,15 @@ def test_repository_checkin_is_atomic(db_url, monkeypatch):
                          $$ BEGIN RAISE EXCEPTION 'forced'; END $$ LANGUAGE plpgsql""")
         admin.execute("CREATE TRIGGER it_fail_trg BEFORE INSERT OR UPDATE ON weight_entries "
                       "FOR EACH ROW EXECUTE FUNCTION it_fail()")
-        try:
-            with pytest.raises(psycopg.Error):
-                repo.save_morning_checkin(checkin_date=day, weight_kg=80, sleep_hours=5,
-                                          soreness_level=9)
-        finally:
-            admin.execute("DROP TRIGGER it_fail_trg ON weight_entries")
-            admin.execute("DROP FUNCTION it_fail()")
+        with pytest.raises(psycopg.Error):
+            repo.save_morning_checkin(checkin_date=day, weight_kg=80, sleep_hours=5,
+                                      soreness_level=9)
+        admin.execute("DROP TRIGGER it_fail_trg ON weight_entries")
         after = repo.get_morning_checkin(day)
         assert float(after["weight_kg"]) == 70.5 and after["soreness_level"] == 3
     finally:
+        admin.execute("DROP TRIGGER IF EXISTS it_fail_trg ON weight_entries")
+        admin.execute("DROP FUNCTION IF EXISTS it_fail()")
         admin.execute("DELETE FROM daily_checkins WHERE checkin_date=%s", (day,))
         admin.execute("DELETE FROM weight_entries WHERE entry_date=%s", (day,))
         admin.close()
