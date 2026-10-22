@@ -2,6 +2,12 @@
 
 Newest first. Each agent session appends what was done, what is blocked, and what needs an owner decision.
 
+## 2026-10-22 — T-012 and T-013 done; T-014 in progress
+- T-012 done (PR #23): "Log what I ate" page `pages/7_Log_What_I_Ate.py`, service-side validation, remove confirm. One review round requested changes; fixed.
+- T-013 done (PR #22): `pages/6_Daily_Progress.py`, totals from logs only, unknown shown as unknown. Targets are typed on the page for now; `user_profile` has no stored targets, so T-022/T-031 must supply them.
+- Not yet checked at 375 px phone width. Owner to try both pages. T-014 now in progress.
+- Workflow lessons: builders push with `[hold]` until the reviewer approves (T-003 merged before fixes); the lead applies DB steps (schema agent has no DB access); shut agents down on merge.
+
 ## 2026-10-22 — T-003 and T-011 done; T-012, T-013 in progress
 - T-003 done (PRs #18, #19): Postgres integration tests with host allowlist guard; skip without `SMOKE_DATABASE_URL`.
 - T-011 done (PR #20): migration 009 `meal_logs`, tested on `claude-dev` (applied twice, 17 columns, 3 indexes).
