@@ -1,20 +1,26 @@
-# AI scope (PROPOSED, awaiting owner decision D11)
+# AI scope (DECIDED, D7 and D11, 2026-10-22)
 
-Owner direction (2026-10-21): drop the OpenAI SDK; re-scope AI to where it is genuinely worth it. AI is not for forms or anything deterministic code can do.
+AI is used only where deterministic code cannot do the job, inside a deterministic, conservative skeleton: AI personalises, Python validates, the owner accepts or edits. Implementation rules: `.claude/skills/ai-feature-rules/SKILL.md`.
 
-Provider: Gemini free tier only (OpenAI removed). Every call goes through the budget guard (`bulking_app/ai/budget.py`). AI output is advisory and never changes plans, logs or inventory without explicit acceptance. An AI outage never blocks manual tracking.
+Provider: Claude API, Haiku-class model by default, through the budget guard (`bulking_app/ai/budget.py`, `AI_MAX_CALLS_PER_DAY=5` and a token cap). Gemini code and `google-genai` are to be removed (backlog item 6); OpenAI is already gone.
+
+## In scope
+| ID | Use | Context sent (minimal) |
+|---|---|---|
+| A1 | Meal suggestions and diet plan personalisation within the weekly meal pattern | Available foods, preference labels, remaining macro numbers |
+| A4 | Calisthenics workout ideas (pull-up bar and dip bar only) within the skeleton plan | Equipment, baseline ability numbers (e.g. max reps) |
+
+One structured request per feature, generated once per day and cached. Output is validated JSON; invalid output or an outage falls back to the deterministic skeleton.
+
+Last-resort nutrition estimate for a food with no data source is allowed only as an editable draft labelled "AI estimate, unverified", never auto-saved, through the same guard.
+
+## Dropped
+A2 (free text to draft food entry) and A3 (weekly written review). T-051 (optional second provider) is replaced by the switch to Claude.
 
 ## Stays deterministic Python (no AI)
-Form filling, validation, voice/text meal commands, meal logging, inventory deduction, unit handling, nutrition totals, targets arithmetic, weight/trend calculations, reminders, CSV import/export.
+Meal logging and commands, inventory, units, nutrition totals, target formula, next-meal timing, check-ins, trends, improvement tracker, reminders and motivation messages, imports.
 
-## Candidate AI uses (owner to pick)
-| ID | Use | Why AI helps | Context sent |
-|---|---|---|---|
-| A1 | Meal suggestions from current stock, recipes and preferences | Combinatorial and creative; hard to hand-write rules | Compact list of available foods, recipe names, preference labels |
-| A2 | Free-text food to a draft food/recipe entry (nutrition unknown stays unknown) | Saves typing; always shown as an editable draft labelled AI-generated | The text the owner typed |
-| A3 | Weekly written review of logged trends | Narrative summary only; numbers computed in Python | Aggregated weekly numbers, no notes |
-| A4 | Workout session ideas (needs D4) | Variety | Equipment and goal labels |
+## Never sent to a provider
+Weight, height, age, body measurements, health, digestion or appetite notes, free-text notes.
 
-Recommendation: ship A1 first, A2 second; defer A3 and A4. Drop the "optional Claude provider" task (T-051) unless asked.
-
-Not in scope: diagnosis, supplement advice, aggressive targets, or conclusions about digestion.
+Not in scope: diagnosis, supplement advice, aggressive targets, conclusions about digestion.

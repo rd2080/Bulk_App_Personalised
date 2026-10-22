@@ -1,47 +1,55 @@
 # Backlog
 
-Status: `todo` | `doing` | `review` | `done` | `blocked`. Reconciled with the owner's seven handover documents on 2026-10-21. Pick the earliest `todo` whose dependencies are done. Acceptance IDs (AC-, D-, OPS-, QA-) refer to those documents.
+Prioritised plan, rewritten 2026-10-22 from owner decisions (`docs/decisions/open-decisions.md`). Status: `todo` | `doing` | `done` | `blocked`. Pick the earliest `todo` whose dependencies are done. Waves and roles: `docs/engineering/team-plan.md`.
 
-## P0 Foundation and truth
-- T-001 `doing` Fix failing CI: `pytest -q` exits 2 on `main` (collection error suspected: repo root not on `sys.path`). Fix via `pytest.ini` + `python -m pytest`. Accept: green CI on the PR (QA-01, OPS-01).
-- T-002 `done` Legacy SQLite path: `bulking_app/database.py` and `tests/test_services.py` model an older design. Trace call sites; remove or migrate, and document the decision (QA P0).
-- T-003 `todo` Postgres integration tests: apply migrations 001–008 to an isolated Neon branch and check constraints, FKs, check-in+weight atomic rollback, plan isolation, CSV atomicity. Must fail closed if the target URL is `production` (QA-03, QA-04, QA-05, QA-08, D-01..D-07). Needs a test `DATABASE_URL` secret for CI; agents use the Neon tools on `claude-dev`.
-- T-004 `todo` Migration runner: `scripts/apply_migrations.py` plus a `schema_migrations` table recording applied versions per environment (D-08, OPS-03). Agents run it on `claude-dev` only.
-- T-005 `done` AI budget guard around `bulking_app/ai/`: cache, per-day call/token cap, deterministic fallback, minimal context (AC-14, D-12). Done (PR #9): callers must still catch `AIUnavailable`; counters are per-process.
-- T-006 `done` Hygiene: `requirements-dev.txt`, fix duplicate `1_` page prefixes, README test section.
-- T-007 `blocked` Verify the live Streamlit deployment and deployed commit (never verified in the handover). Needs the app URL from the owner.
-- T-008 `todo` Release runbook in `docs/ops/`: release record template, smoke checklist, rollback notes (Doc 06). Production migration stays a human step.
+Each task lists: **Scope**, **Accept** (acceptance criteria), **Risk**, **Role** (schema / builder / reviewer / docs-writer), **Owns** (files only this task edits), **Effort** (low / medium / high = model effort level). Every task: tests with synthetic data, CI green, phone-width layout checked for UI work. Migration numbers are assigned at implementation time (next free number); tasks touching `database/migrations/` must run one at a time.
 
-## P1 Actual meal logging (largest missing feature)
-- T-010 `todo` ADR for the log model with recommended defaults (see open decisions D1); the PR review is the owner's gate.
-- T-011 `todo` Additive migration + repository for meal logs: consumed time/date, item (recipe, inventory food or free text), amount + unit, optional plan link, source (manual/command), nutrition provenance. Logs can exist without a plan (AC-10, D-09).
-- T-012 `todo` "Log what I ate" page: separate from plan editing, partial servings, unplanned items, saved confirmation, daily log.
-- T-013 `todo` Command-assisted logging reusing the deterministic parser ("I ate three eggs"); ambiguity asks for clarification.
-- T-014 `todo` Idempotent inventory deduction on log; corrections update totals and inventory visibly (AC-11).
+## Done before this plan
+T-001 CI fix, T-002 legacy SQLite removed, T-005 AI budget guard, T-006 hygiene, T-070 handover merged.
 
-## P2 Nutrition
-- T-020 `todo` Per-serving nutrition from recipes using the documented scaling; unknown stays unknown; provenance label (product label / dataset / user entry / estimate).
-- T-021 `todo` Daily totals from logs only, never from plans; plan vs actual comparison (after T-014).
-- T-022 `blocked` Configurable intake targets stored separately from intake, with visible assumptions and a clinician/dietitian note. Needs owner decision D3 first.
+## 0. Foundations (run alongside priority 1)
+- **T-003** `todo` Postgres integration tests. Scope: apply all migrations to the CI throwaway Postgres and test constraints, FKs, atomic check-in+weight rollback, plan isolation. Accept: tests fail closed if the URL names `production`; green in CI. Risk: low. Role: builder. Owns: `tests/integration/`. Effort: medium.
+- **T-004** `todo` Migration runner. Scope: `scripts/apply_migrations.py` + `schema_migrations` table recording applied versions; used by `migration-procedure`. Accept: idempotent rerun; refuses `production` without `--production` flag and a backup-branch name argument. Risk: medium. Role: schema. Owns: `scripts/apply_migrations.py`, `database/migrations/` (new file), `tests/test_apply_migrations.py`. Effort: high.
+- **T-007** `blocked` Verify the live deployment and deployed commit. Needs the Streamlit app URL from the owner. Role: lead. Effort: low.
 
-## P3 Personalisation (Doc 02)
-- T-030 `blocked` Configurable preferences (eggs, exclusions, shake ingredients, budget, equipment, meal timing). `user_profile` is fixed at ten fields by earlier decision, so propose an additive `user_preferences` table. Needs D2.
-- T-031 `todo` Staleness: show the age of profile/measurement values and prompt confirmation when it matters.
-- T-032 `todo` Optional structured observations for digestion, appetite and energy, non-diagnostic, saved with partial check-ins.
+## 1. Meal logging + daily target vs progress (phone-first)
+- **T-011** `todo` Meal log schema + repository (D1 defaults). Scope: additive `meal_logs` table (date, optional time, item ref: recipe / food / free text, amount + unit, kcal and protein with provenance, optional plan link, source manual/command, soft delete, `updated_at`). Accept: logs exist without a plan; plans never write logs; unknown nutrition stored NULL; applied via `migration-procedure`. Risk: medium (production migration). Role: schema. Owns: `database/migrations/` (new), `bulking_app/repositories/meal_log.py`, `docs/database/schema.md`, `database/migrations/README.md`, `tests/test_meal_log.py`. Effort: high.
+- **T-012** `todo` "Log what I ate" page. Scope: phone-first page: quick add from foods/recipes, partial servings, unplanned items, edit/soft delete, today's list. Accept: saved confirmation only after a verified write; works at 375 px width; no plan changes. Risk: low. Role: builder. Owns: `pages/` (new log page), `bulking_app/services/meal_logging.py`, `tests/test_meal_logging.py`. Effort: medium. Depends: T-011.
+- **T-013** `todo` Daily target vs progress. Scope: today's kcal and protein from logs only vs the current target (owner-entered until T-022); "incomplete" when items have unknown nutrition. Accept: never counts planned meals; unknowns shown, not zero. Risk: low. Role: builder. Owns: `bulking_app/services/daily_progress.py`, home/progress page, `tests/test_daily_progress.py`. Effort: medium. Depends: T-011.
+- **T-014** `todo` Command-assisted logging ("I ate three eggs") reusing the deterministic parser; ambiguity asks. Idempotent inventory deduction; corrections visible. Accept: retried command never deducts twice. Risk: medium. Role: builder. Owns: `bulking_app/meal_commands.py`, `bulking_app/services/meal_logging.py` (after T-012), `tests/test_meal_commands.py`. Effort: medium. Depends: T-012.
 
-## P4 Analysis
-- T-040 `todo` Weight and check-in charts with date range, units, sample count, visible missing days, low-confidence labels (AC-12, D-11).
-- T-041 `todo` Deterministic weekly review (after T-021).
+## 2. IFCT food database + recipes
+- **T-020** `todo` Food source and licence record. Scope: locate the MIT-licensed machine-readable IFCT 2017, record source/version/licence in `docs/data/food-sources.md`. Accept: licence file stored with the data; stop and ask if only non-MIT is available. Risk: low (licence). Role: docs-writer. Owns: `docs/data/`, `data/ifct/LICENSE`. Effort: low.
+- **T-021** `todo` Food reference schema + idempotent IFCT import. Scope: additive `food_reference` table (per-100 g values, yields, provenance); script imports the CSV once. Accept: rerun does not duplicate; unknown stays NULL; production seed via `migration-procedure`. Risk: medium. Role: schema. Owns: `database/migrations/` (new), `scripts/import_ifct.py`, `bulking_app/repositories/food_reference.py`, `tests/test_food_reference.py`. Effort: high. Depends: T-020.
+- **T-022** `todo` Recipe nutrition computed from ingredients (raw weight × IFCT, cooking yield, per serving), provenance labels. Accept: matches hand-computed synthetic examples; unit mismatches rejected. Risk: medium. Role: builder. Owns: `bulking_app/services/nutrition.py`, `bulking_app/repositories/recipe_library.py`, `tests/test_nutrition.py`. Effort: medium. Depends: T-021.
+- **T-023** `todo` Gaps: manual food entry and Open Food Facts lookup for packaged items; AI estimate only as labelled unsaved draft (after item 6). Accept: OFF id and fetch date stored; no auto-save of estimates. Risk: low. Role: builder. Owns: `bulking_app/services/food_lookup.py`, food page, `tests/test_food_lookup.py`. Effort: medium. Depends: T-021.
 
-## P5 AI features (after T-005; Gemini free tier by default)
-- T-050 `blocked` (D11 scope pick) Advisory meal suggestions grounded in inventory, recipes and preferences: labelled as generated, context disclosed, regenerate/edit/accept/dismiss, safe failure (AC-14, AC-15).
-- T-051 `todo` Optional Claude provider adapter; default provider unchanged. Proposed: drop (D11).
-- T-052 `blocked` Calisthenics workout planning and logging (pull-up and dip bar only). Needs D4.
+## 3. Suggested targets + next-meal timing
+- **T-030** `todo` Preferences table (D2 default). Scope: additive `user_preferences` (exclusions, meal times, wake/sleep, training time, equipment, check-in cadence). Accept: `user_profile` unchanged; via `migration-procedure`. Risk: medium. Role: schema. Owns: `database/migrations/` (new), `bulking_app/repositories/user_preferences.py`, `tests/test_user_preferences.py`. Effort: high.
+- **T-031** `todo` Deterministic target formula (D3). Scope: suggested kcal/protein from profile with a conservative surplus; assumptions shown, "estimate" label, clinician/dietitian note, owner override stored separately. Accept: no AI; formula documented with synthetic worked examples; override always wins; staleness of measurements shown. Risk: high (health). Role: builder. Owns: `bulking_app/services/targets.py`, targets page, `docs/targets.md`, `tests/test_targets.py`. Effort: high. Depends: T-030.
+- **T-032** `todo` "What to eat next and when". Scope: from remaining target, the day's plan, meal times and available foods, deterministically suggest the next meal and time. Accept: never treats planned as eaten; works with no AI. Risk: medium. Role: builder. Owns: `bulking_app/services/next_meal.py`, `tests/test_next_meal.py`. Effort: medium. Depends: T-013, T-031.
+- **T-033** `todo` Weekly repeatable meal pattern (diet plan skeleton). Scope: deterministic weekly pattern from targets and foods; owner edits and accepts; generates daily plans. Accept: plan totals computed in Python; never writes logs. Risk: medium. Role: builder. Owns: `bulking_app/services/meal_pattern.py`, plan page, `tests/test_meal_pattern.py`. Effort: medium. Depends: T-022, T-031.
 
-## P6 Later / undecided
-- T-060 `blocked` Reminders: channel, runtime and quiet hours undecided; Streamlit Cloud has no scheduler (D5).
-- T-061 `blocked` CSV export: scope undecided (D6).
-- T-062 `todo` Supplement tracking as user-entered products only.
+## 4. Calisthenics planning and logging
+- **T-040** `todo` Workout schema. Scope: additive tables for exercises (pull-up/dip bar only), plan sessions and logged sets (reps, assistance, RPE). Accept: via `migration-procedure`. Risk: medium. Role: schema. Owns: `database/migrations/` (new), `bulking_app/repositories/workouts.py`, `tests/test_workouts_repo.py`. Effort: high.
+- **T-041** `todo` Beginner skeleton plan + session logging page. Scope: deterministic conservative progression from baseline ability numbers; log sets on phone; trainer-review note. Accept: equipment limited to the two bars; progression capped. Risk: medium (injury). Role: builder. Owns: `bulking_app/services/workout_plan.py`, workout page, `tests/test_workout_plan.py`. Effort: medium. Depends: T-040.
 
-## Meta
-- T-070 `done` Handover documents merged. Documents 05 (roadmap/status) and 06 (AI automation strategy) listed in Doc 01 were not supplied; this backlog, `PROGRESS.md` and `CLAUDE.md` replace them.
+## 5. Check-ins + Telegram reminders
+- **T-050** `todo` Daily light check-in (sleep, soreness, optional weight) and weekly Saturday check-in stored at weekly level; configurable fields. Accept: one weigh-in never labelled a trend; additive schema via `migration-procedure`. Risk: medium. Role: schema then builder. Owns: `database/migrations/` (new), `bulking_app/repositories/weekly_checkin.py`, check-in pages, `tests/test_checkins.py`. Effort: high (schema) / medium (UI).
+- **T-051** `todo` Read-only database role. Scope: SQL for a role with SELECT on the few tables reminders need; owner adds its URL as a GitHub secret. Accept: role cannot write (tested on `claude-dev`). Risk: medium. Role: schema. Owns: `database/roles/reminder_readonly.sql`, `docs/ops/reminders.md`. Effort: high.
+- **T-052** `todo` Telegram morning reminder. Scope: replace the no-op `.github/workflows/morning-reminder.yml` with a cron (UTC, converted from owner's local time) running `scripts/send_reminder.py`: deterministic minimal message, no health detail. Accept: dry-run mode tested; secrets `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `REMINDER_DATABASE_URL`; click-by-click owner steps in `docs/ops/reminders.md`. Risk: low. Role: builder. Owns: `.github/workflows/morning-reminder.yml`, `scripts/send_reminder.py`, `tests/test_send_reminder.py`. Effort: medium. Depends: T-051.
+
+## 6. AI A1/A4 on Claude
+- **T-060** `todo` Switch provider to Claude. Scope: Claude adapter (Haiku-class default, `max_tokens`, structured output), remove Gemini code and `google-genai`, budget defaults 5 calls/day + low token cap, day-level cache persisted. Accept: rules in `ai-feature-rules`; CI never calls the real API; `.env.example` updated; owner told to set a monthly spend limit. Risk: medium. Role: builder. Owns: `bulking_app/ai/`, `requirements.txt`, `.env.example`, `tests/test_ai_*.py`. Effort: high (output validation).
+- **T-061** `todo` A1 meal suggestions inside the weekly pattern. Accept: minimal context test (no forbidden fields); validated food ids and Python totals; fallback to skeleton; accept/edit/dismiss. Risk: medium. Role: builder. Owns: `bulking_app/services/ai_meals.py`, `tests/test_ai_meals.py`. Effort: high. Depends: T-060, T-033.
+- **T-062** `todo` A4 workout ideas inside the skeleton plan. Accept: equipment-limited, volume capped by skeleton, fallback, accept/edit/dismiss. Risk: medium. Role: builder. Owns: `bulking_app/services/ai_workouts.py`, `tests/test_ai_workouts.py`. Effort: high. Depends: T-060, T-041.
+
+## 7. Improvement tracker + morning motivation
+- **T-070** `todo` Improvement tracker. Scope: weekly weight trend (from weekly check-ins), strength progress (reps per exercise), intake adherence; sample counts and missing days visible. Accept: low-confidence labels; no single-point trends. Risk: low. Role: builder. Owns: `bulking_app/services/progress.py`, progress page, `tests/test_progress.py`. Effort: medium. Depends: T-050, T-041, T-013.
+- **T-071** `todo` Morning motivation check. Scope: in-app morning card + deterministic Telegram text (yesterday's adherence, today's plan headline), no health detail. Accept: message templates tested; no AI. Risk: low. Role: builder. Owns: `bulking_app/services/motivation.py`, `scripts/send_reminder.py` (after T-052), `tests/test_motivation.py`. Effort: medium. Depends: T-052, T-070.
+
+## Later
+- **T-080** Release runbook in `docs/ops/` (release record, smoke checklist, rollback). Role: docs-writer. Effort: low.
+- **T-081** Data wipe of old personal rows: only on owner's word that new tables are ready, after backup, with final confirmation; then reset `claude-dev` from production. Role: lead. Effort: high.
+- **T-082** Supplement tracking as user-entered products only. Effort: medium.
+- **T-083** Old staleness/observation items: show age of profile values; optional non-diagnostic digestion/appetite observations. Effort: medium.

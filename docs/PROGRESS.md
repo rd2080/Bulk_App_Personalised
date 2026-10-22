@@ -2,6 +2,12 @@
 
 Newest first. Each agent session appends what was done, what is blocked, and what needs an owner decision.
 
+## 2026-10-22 — Phase 0: owner decisions recorded, team setup
+- Owner confirmed D3-D7, D9-D12 (see `docs/decisions/open-decisions.md`); D2 proceeds on default. AI = Claude, A1/A4 only; reminders = Telegram via GitHub Actions; agents may apply additive production migrations per `migration-procedure`.
+- CLAUDE.md slimmed; procedures moved to `.claude/skills/` (migration-procedure, ship-and-verify, report-format, ai-feature-rules, food-data-rules). Agents now schema/builder/reviewer/ci-watcher/docs-writer with explicit model and effort; `.claude/settings.json` added.
+- BACKLOG rewritten as 7 priorities; `docs/engineering/team-plan.md` holds roles, waves and the token contract. Actions bumped to checkout@v6/setup-python@v6; no-op `morning-reminder.yml` added.
+- Next: wave 1 (T-011 meal log schema). Owner to-do: make repo private (D10).
+
 ## 2026-10-21 — OpenAI removed, AI re-scope proposed
 - Owner dropped the OpenAI SDK and asked to re-scope AI. Removed `openai_adapter.py`, the `openai` dependency, env vars and doc mentions; Gemini is the only provider. Proposed scope in `docs/ai/scope.md` (D11), awaiting the owner's pick.
 
