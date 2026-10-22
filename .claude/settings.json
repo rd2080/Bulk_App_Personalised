@@ -3,7 +3,7 @@
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
-  "teammateMode": "auto",
+  "teammateMode": "tmux",
   "model": "sonnet",
   "effortLevel": "medium",
   "permissions": {
@@ -32,10 +32,21 @@
     ],
     "ask": [
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__reset_from_parent",
+      "mcp__claude_ai_Neon__reset_from_parent",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__restore_snapshot",
+      "mcp__claude_ai_Neon__restore_snapshot",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__finalize_branch_restore",
+      "mcp__claude_ai_Neon__finalize_branch_restore",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__set_default_branch",
-      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__complete_database_migration"
+      "mcp__claude_ai_Neon__set_default_branch",
+      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__complete_database_migration",
+      "mcp__claude_ai_Neon__complete_database_migration",
+      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__run_sql",
+      "mcp__claude_ai_Neon__run_sql",
+      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__run_sql_transaction",
+      "mcp__claude_ai_Neon__run_sql_transaction",
+      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__prepare_database_migration",
+      "mcp__claude_ai_Neon__prepare_database_migration"
     ],
     "deny": [
       "Bash(git push --force:*)",
@@ -46,7 +57,14 @@
       "Bash(git push -u origin main:*)",
       "Bash(git push --delete:*)",
       "Bash(git push origin --delete:*)",
-      "Bash(git push origin :*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f *)",
+      "Bash(git push * -f)",
+      "Bash(git push * --delete *)",
+      "Bash(git push * -d *)",
+      "Bash(git push * main)",
+      "Bash(git push * HEAD:main)",
+      "Bash(git push * *:main)",
       "Bash(git branch -d:*)",
       "Bash(git branch -D:*)",
       "Bash(git branch --delete:*)",
@@ -54,18 +72,26 @@
       "Read(./.env)",
       "Read(./.env.*)",
       "Edit(./.env)",
-      "Write(./.env)",
       "Read(./.streamlit/secrets.toml)",
       "Edit(./.streamlit/secrets.toml)",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_branch",
+      "mcp__claude_ai_Neon__delete_branch",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_project",
+      "mcp__claude_ai_Neon__delete_project",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_postgres_database",
+      "mcp__claude_ai_Neon__delete_postgres_database",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_postgres_role",
+      "mcp__claude_ai_Neon__delete_postgres_role",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_postgres_endpoint",
+      "mcp__claude_ai_Neon__delete_postgres_endpoint",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_snapshot",
+      "mcp__claude_ai_Neon__delete_snapshot",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__reset_postgres_role_password",
+      "mcp__claude_ai_Neon__reset_postgres_role_password",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__revoke_credential",
-      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__rotate_credential"
+      "mcp__claude_ai_Neon__revoke_credential",
+      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__rotate_credential",
+      "mcp__claude_ai_Neon__rotate_credential"
     ]
   }
 }
