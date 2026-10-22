@@ -8,10 +8,14 @@ repository is reached.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from bulking_app.meal_commands import normalize_food_name, parse_eaten_command
 from bulking_app.repositories import meal_log
+
+RETRY_WINDOW = timedelta(minutes=2)
 
 UNKNOWN = "unknown"
 
@@ -131,11 +135,12 @@ def edited_entry(log: dict[str, Any], name: str, quantity: Any, unit: str,
     return entry
 
 
-def add_entry(log_date: Any, entry: dict[str, Any], log_time: Any = None) -> dict[str, Any]:
+def add_entry(log_date: Any, entry: dict[str, Any], log_time: Any = None,
+              source: str = "manual") -> dict[str, Any]:
     """Create a log and return it only if it reads back; otherwise raise."""
     entry = validate_entry(entry)
     try:
-        new_id = meal_log.create_log(log_date=log_date, log_time=log_time, source="manual", **entry)
+        new_id = meal_log.create_log(log_date=log_date, log_time=log_time, source=source, **entry)
         saved = meal_log.get_log(new_id)
     except ValueError as exc:
         raise LogWriteError(str(exc)) from exc
@@ -173,6 +178,70 @@ def remove_entry(log_id: int) -> None:
         raise LogWriteError("That entry was already removed or not found.")
     if still_there:
         raise LogWriteError("The removal could not be confirmed. Please check the list.")
+
+
+def _is_retry(existing: dict[str, Any], entry: dict[str, Any], now: datetime) -> bool:
+    """Same command-sourced item logged moments ago: a retry, not a new meal."""
+    created = existing.get("created_at")
+    if existing.get("source") != "command" or not isinstance(created, datetime):
+        return False
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    same = (normalize_food_name(existing["item_name"]) == normalize_food_name(entry["item_name"])
+            and existing["unit"] == entry["unit"]
+            and Decimal(str(existing["quantity"])) == Decimal(str(entry["quantity"])))
+    return same and timedelta(0) <= now - created <= RETRY_WINDOW
+
+
+def log_from_command(text: str, log_date: Any, foods: list[dict[str, Any]], *,
+                     allow_free_text: bool = False, now: datetime | None = None) -> dict[str, Any]:
+    """Log "I ate three eggs". Deterministic; asks instead of guessing.
+
+    Status: "logged", "duplicate" (a retry within RETRY_WINDOW, nothing written) or
+    "clarification". Nutrition stays unknown. Pantry stock is never changed here, so a
+    retry cannot deduct inventory. Set allow_free_text to log a food not in the pantry.
+    """
+    parsed = parse_eaten_command(text)
+    if parsed["status"] != "ok":
+        return parsed
+    wanted = normalize_food_name(parsed["item_name"])
+    matches = [f for f in foods if normalize_food_name(f["food_name"]) == wanted]
+    if len(matches) > 1:
+        return {"status": "clarification",
+                "message": f"More than one food matches '{parsed['item_name']}'. Log it from the list."}
+    if matches:
+        entry = food_entry(matches[0], parsed["quantity"], parsed["unit"])
+    elif allow_free_text:
+        entry = free_text_entry(parsed["item_name"], parsed["quantity"], parsed["unit"])
+    else:
+        return {"status": "clarification",
+                "message": f"'{parsed['item_name']}' is not in your foods. Confirm to log it as typed."}
+    try:
+        entry = validate_entry(entry)
+    except ValueError as exc:
+        return {"status": "clarification", "message": str(exc)}
+    now = now or datetime.now(timezone.utc)
+    try:
+        existing = meal_log.list_logs(log_date)
+    except Exception as exc:
+        raise LogWriteError("Could not check today's log. Nothing was recorded.") from exc
+    for log in existing:
+        if _is_retry(log, entry, now):
+            return {"status": "duplicate", "log": log,
+                    "message": "Already logged a moment ago, so I did not add it again."}
+    saved = add_entry(log_date, entry, source="command")
+    return {"status": "logged", "log": saved,
+            "message": "Logged. Nutrition is unknown until you add it."}
+
+
+def undo_last_command(log_date: Any) -> dict[str, Any] | None:
+    """Soft-delete the newest command-logged entry of the day."""
+    commands = [x for x in meal_log.list_logs(log_date) if x["source"] == "command"]
+    if not commands:
+        return None
+    target = max(commands, key=lambda x: x["id"])
+    remove_entry(target["id"])
+    return target
 
 
 def format_value(value: Any, suffix: str) -> str:
