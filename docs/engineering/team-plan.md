@@ -61,6 +61,9 @@ T-004 (migration runner) slots in before the first production migration if time 
 - Click a pane to focus it and type to steer that teammate directly; scroll with the mouse. Settings load at startup, so restart `claude` after changing them.
 - Panes cost nothing extra; tokens do. Rule 1 still applies: max 3 teammates (4 for schema + services + UI + reviewer).
 
+## Stable releases to main
+The owner tests on the live app, so agents may push to `main` directly once a build is stable. Before any direct push: full tests pass locally, the app starts and the changed pages render, required migrations are applied (`migration-procedure`), and the reviewer has seen the diff. Fast-forward pushes only, never force. Report exactly what was verified (`report-format`). If any check is missing, use the Ship PR path instead.
+
 ## Owner-only actions (agents give click-by-click steps, never ask for secret values in chat)
 - Set GitHub/Streamlit secrets (`ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `REMINDER_DATABASE_URL`).
 - Set a monthly spend limit in the Anthropic Console.

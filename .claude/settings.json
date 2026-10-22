@@ -1,36 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  },
+  "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" },
   "teammateMode": "tmux",
   "model": "sonnet",
   "effortLevel": "medium",
   "permissions": {
     "allow": [
-      "Bash(git status:*)",
-      "Bash(git diff:*)",
-      "Bash(git log:*)",
-      "Bash(git show:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git fetch:*)",
-      "Bash(git switch -c claude/*)",
-      "Bash(git checkout -b claude/*)",
-      "Bash(git push -u origin claude/*)",
-      "Bash(git push origin claude/*)",
-      "Bash(gh run list:*)",
-      "Bash(gh run view:*)",
-      "Bash(gh run watch:*)",
-      "Bash(gh pr list:*)",
-      "Bash(gh pr view:*)",
-      "Bash(python -m pytest:*)",
-      "Bash(pip install -r requirements-dev.txt)",
-      "Read(./**)",
-      "Edit(./**)",
-      "Write(./**)"
+      "Bash", "Read", "Edit", "Write", "Glob", "Grep", "WebFetch", "WebSearch",
+      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4",
+      "mcp__claude_ai_Neon"
     ],
     "ask": [
+      "Bash(rm -rf:*)", "Bash(git reset --hard:*)", "Bash(git clean:*)",
+      "Bash(gh repo delete:*)", "Bash(gh secret:*)", "Bash(gh auth:*)",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__reset_from_parent",
       "mcp__claude_ai_Neon__reset_from_parent",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__restore_snapshot",
@@ -41,57 +23,50 @@
       "mcp__claude_ai_Neon__set_default_branch",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__complete_database_migration",
       "mcp__claude_ai_Neon__complete_database_migration",
-      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__run_sql",
-      "mcp__claude_ai_Neon__run_sql",
-      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__run_sql_transaction",
-      "mcp__claude_ai_Neon__run_sql_transaction",
-      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__prepare_database_migration",
-      "mcp__claude_ai_Neon__prepare_database_migration"
-    ],
-    "deny": [
-      "Bash(git push --force:*)",
-      "Bash(git push -f:*)",
-      "Bash(git push --force-with-lease:*)",
-      "Bash(git push origin main:*)",
-      "Bash(git push origin HEAD:main:*)",
-      "Bash(git push -u origin main:*)",
-      "Bash(git push --delete:*)",
-      "Bash(git push origin --delete:*)",
-      "Bash(git push * --force*)",
-      "Bash(git push * -f *)",
-      "Bash(git push * -f)",
-      "Bash(git push * --delete *)",
-      "Bash(git push * -d *)",
-      "Bash(git push * main)",
-      "Bash(git push * HEAD:main)",
-      "Bash(git push * *:main)",
-      "Bash(git branch -d:*)",
-      "Bash(git branch -D:*)",
-      "Bash(git branch --delete:*)",
-      "Bash(cat .env:*)",
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Edit(./.env)",
-      "Read(./.streamlit/secrets.toml)",
-      "Edit(./.streamlit/secrets.toml)",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_branch",
       "mcp__claude_ai_Neon__delete_branch",
-      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_project",
-      "mcp__claude_ai_Neon__delete_project",
+      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_snapshot",
+      "mcp__claude_ai_Neon__delete_snapshot",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_postgres_database",
       "mcp__claude_ai_Neon__delete_postgres_database",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_postgres_role",
       "mcp__claude_ai_Neon__delete_postgres_role",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_postgres_endpoint",
       "mcp__claude_ai_Neon__delete_postgres_endpoint",
-      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_snapshot",
-      "mcp__claude_ai_Neon__delete_snapshot",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__reset_postgres_role_password",
       "mcp__claude_ai_Neon__reset_postgres_role_password",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__revoke_credential",
       "mcp__claude_ai_Neon__revoke_credential",
       "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__rotate_credential",
       "mcp__claude_ai_Neon__rotate_credential"
+    ],
+    "deny": [
+      "Bash(git push --force:*)", "Bash(git push -f:*)", "Bash(git push --force-with-lease:*)",
+      "Bash(git push * --force*)", "Bash(git push * -f *)", "Bash(git push * -f)",
+      "Bash(git push * --delete *)", "Bash(git push * -d *)", "Bash(git push --delete:*)",
+      "Bash(git branch -d:*)", "Bash(git branch -D:*)", "Bash(git branch --delete:*)",
+      "Read(./.env)", "Read(./.env.local)", "Read(./.env.production)",
+      "Read(./.env.development)", "Read(./.env.test)",
+      "Edit(./.env)", "Edit(./.env.local)", "Edit(./.env.production)",
+      "Edit(./.env.development)", "Edit(./.env.test)",
+      "Read(./.streamlit/secrets.toml)", "Edit(./.streamlit/secrets.toml)",
+      "Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(~/.config/gh/**)", "Read(~/.netrc)",
+      "Bash(cat .env:*)", "Bash(cat ./.env:*)", "Bash(cat .env.local:*)",
+      "Bash(cat .streamlit/secrets.toml:*)",
+      "mcp__eda45a3c-ac1e-4360-8b29-bd3f7aa63dd4__delete_project",
+      "mcp__claude_ai_Neon__delete_project"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*__(run_sql|run_sql_transaction|prepare_database_migration|execute_sql|apply_migration)",
+        "hooks": [{ "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/guard_sql.py\"" }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/guard_sql.py\"" }]
+      }
     ]
   }
 }
