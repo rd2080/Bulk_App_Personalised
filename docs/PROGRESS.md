@@ -2,6 +2,12 @@
 
 Newest first. Each agent session appends what was done, what is blocked, and what needs an owner decision.
 
+## 2026-10-22 — Milestone: Priority 1 complete (meal logging + daily progress)
+- Merged: T-011 meal_logs table (live in production), T-012 log page, T-013 daily progress, T-014 and T-014b typed-command logging with undo.
+- Owner to try on a phone: `7_Log_What_I_Ate` and `6_Daily_Progress`. Not yet checked at 375 px or against the live database by an agent.
+- Known follow-ups: stale 'again'/'as typed' buttons can linger after a new date or submit (clear `pending_cmd`); 'as typed' button keyed to message text; targets typed per session until T-022/T-031; retry check is not atomic (logs only, no inventory).
+- Next: Priority 2 (IFCT food database + recipes) or T-004 migration runner; see BACKLOG.
+
 ## 2026-10-22 — T-012 and T-013 done; T-014 in progress
 - T-012 done (PR #23): "Log what I ate" page `pages/7_Log_What_I_Ate.py`, service-side validation, remove confirm. One review round requested changes; fixed.
 - T-013 done (PR #22): `pages/6_Daily_Progress.py`, totals from logs only, unknown shown as unknown. Targets are typed on the page for now; `user_profile` has no stored targets, so T-022/T-031 must supply them.
